@@ -1,0 +1,68 @@
+
+power requirements
+------------------
+
+Estimated system use of 93W
+Pullman area is rated 4hr/day full sun exposure so need 93W*(24/4) = 558W daily input or 4x 140W panels
+Using more conservative 100W of use, 100*24/4 = 600W or 4x 150W panels
+
+
+from wholesalesolar.com
+-----------------------
+
+solar panels, qty 4?
+  - Solarland USA; model SPL150S-12; item# 9433286; $275 ea; 59" x 27"; 150W; 8.34A @ 18V; MC4 cables
+  - Kyocera; KD140SX-UFBS; item# 1131401; $300 ea; 59" x 26"; 140W; 7.91A @ 17.7V; raw junction box
+  - Kyocera; KD140GX-LFBS; item# 1131402; $295 ea; 59" x 26"; 140W; 7.91A @ 17.7V; MC4 cables
+  - Solarworld 275; item# 1922275?
+  - Astronergy 305; item# 1977305?
+  *** using multiple 140W+ panels results in exceeding Amp capacity of current (10A) solar controller! see options below
+
+solar panel cable, qty 1
+  - must be sufficiently long to cover double the distance; will cut cable in halff
+  - 50' extension cable; 10 AWG; p/n 9994165; $45
+  - 100' extension cable; 10 AWG; p/n 9991054; $80
+  * may need to increase wire gage significantly (possibly 2 or 1/0 AWG); see (Tristar PWM) controller manual
+  * alternately, connect panels locally & run THHN or similar wire (think Romex)
+
+solar panel cable Y-connector, qty (1 each)*(# panels - 1) --> 2 ea?
+  - MC4 branch connector, 2 male -> 1 female; p/n 9999404; $21
+  - MC4 branch connector, 2 female -> 1 male; p/n 9999403; $21
+
+copper grounding wire (Home Depot)
+  - Cerrowire 25ft 6/1 solid bare copper grounding wire; $19.97
+  - Southwire 6 solid bare copper; $0.89/ft
+
+
+resources
+---------
+http://www.solar-electric.com/how-to-use-mc4-connectors-cables.html
+
+
+some notes
+----------
+* charge controller must be protected from inductive loads
+  - power pump from battery bank using relay on load side
+  - place very large flyback diode across load terminals
+* may need a breaker ("overcurrent protection device"); see (Tristar PWM) controller manual
+* using 4x 150W exceeds largest SunSaver controller capacity (33A > 20A), options:
+  - switch to 24Vdc base voltage
+    . need to replace valves with 24V or get 24->12 transformer
+    . need to replace pump with 24V or get 24-12 transformer
+  - use (2) charge controllers with (1) battery bank (2*$80)
+    . each controller needs to be 20A (8A per 150W panel)
+    . load only from one controller
+  - create two parallel systems
+    . essentially the same as using 2 controllers with 1 battery bank
+    . only real difference is seperate battery banks
+    . possibly also use 10A instead of 20A charge controller for datalogger/sensor system
+    . more hassle than using 2 controllers with 1 battery bank
+  - use TriStar 45A PWM controller ($170) <-- ***currently considered best option***
+    . accepts much higher solar voltage input, allowing series connections across panels
+    . however, charge efficiency decreases with increased input voltages
+    . serial data output <- port-powered!
+  - use TriStar 45A MPPT controller ($410)
+    . increased charge efficiency over PWM, especially at lower temperatures & higher power consumption
+    . if this system is destined for California, temp-related benefits are probably void
+    . serial data output <- probably also port-powered!
+
