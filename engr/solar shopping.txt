@@ -46,17 +46,6 @@ some notes
   - place very large flyback diode across load terminals
 * may need a breaker ("overcurrent protection device"); see (Tristar PWM) controller manual
 * using 4x 150W exceeds largest SunSaver controller capacity (33A > 20A), options:
-  - switch to 24Vdc base voltage
-    . need to replace valves with 24V or get 24->12 transformer
-    . need to replace pump with 24V or get 24-12 transformer
-  - use (2) charge controllers with (1) battery bank (2*$80)
-    . each controller needs to be 20A (8A per 150W panel)
-    . load only from one controller
-  - create two parallel systems
-    . essentially the same as using 2 controllers with 1 battery bank
-    . only real difference is seperate battery banks
-    . possibly also use 10A instead of 20A charge controller for datalogger/sensor system
-    . more hassle than using 2 controllers with 1 battery bank
   - use TriStar 45A PWM controller ($170) <-- ***currently considered best option***
     . accepts much higher solar voltage input, allowing series connections across panels
     . however, charge efficiency decreases with increased input voltages
