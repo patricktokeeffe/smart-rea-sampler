@@ -2,10 +2,9 @@
 power requirements
 ------------------
 
-Estimated system use of 93W
-Pullman area is rated 4hr/day full sun exposure so need 93W*(24/4) = 558W daily input or 4x 140W panels
-Using more conservative 100W of use, 100*24/4 = 600W or 4x 150W panels
-
+Estimated system use of 74W
+Pullman area is rated 4hr/day full sun exposure so need 74W*(24/4) ~= 444W daily input
+    444W = 3.2 @ 140W, 3.0 @ 150W, 1.6 @ 275W, 1.5 @ 300W
 
 from wholesalesolar.com
 -----------------------
