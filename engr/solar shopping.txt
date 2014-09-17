@@ -6,31 +6,70 @@ Estimated system use of 74W
 Pullman area is rated 4hr/day full sun exposure so need 74W*(24/4) ~= 444W daily input
     444W = 3.2 @ 140W, 3.0 @ 150W, 1.6 @ 275W, 1.5 @ 300W
 
-from wholesalesolar.com
------------------------
 
-solar panels, qty 4?
-  - Solarland USA; model SPL150S-12; item# 9433286; $275 ea; 59" x 27"; 150W; 8.34A @ 18V; MC4 cables
-  - Kyocera; KD140SX-UFBS; item# 1131401; $300 ea; 59" x 26"; 140W; 7.91A @ 17.7V; raw junction box
-  - Kyocera; KD140GX-LFBS; item# 1131402; $295 ea; 59" x 26"; 140W; 7.91A @ 17.7V; MC4 cables
-  - Solarworld 275; item# 1922275?
-  - Astronergy 305; item# 1977305?
-  *** using multiple 140W+ panels results in exceeding Amp capacity of current (10A) solar controller! see options below
+assuming: new design, small PV array
+------------------------------------
 
-solar panel cable, qty 1
-  - must be sufficiently long to cover double the distance; will cut cable in halff
-  - 50' extension cable; 10 AWG; p/n 9994165; $45
-  - 100' extension cable; 10 AWG; p/n 9991054; $80
-  * may need to increase wire gage significantly (possibly 2 or 1/0 AWG); see (Tristar PWM) controller manual
-  * alternately, connect panels locally & run THHN or similar wire (think Romex)
+* mounting hardware
+    * 45mm Bosch square tube, roughly 2*77" + 6*39" = 33 ft
+    * 'scissors/triangle' config to permit dual-direction orientation, adj. angle
+* components from wholesalesolar.com:
+    * (1) solar panel, Astronergy 295, item# 1977295 ($285)
+        - 8.3A @ 35.72V
+        - 77" x 39.1" x 2.0"
+    * (1) solar panel cable extension, 30ft, 10AWG, #9902032 ($31)
+    * (1) power center w/ 125A inverter breaker & DIN rail, "MNDC125", #8941250 ($164)
+    * (2) breaker, Din rail mount, 10A, "MNEPV10", #8500312 (2x $12)
+    * (1) breaker, Din rail mount, 3A, "MNEPV3", #8955541 ($12)
+        - inverter manual explicitly calls for 3A fuse; use breaker instead
+    * (1) ground fault protection device, "MNDC-GFP63", #8991041 ($55)
+        - required as of NEC2008
+    * (1) surge suppressor, Midnite Solar "MNSPD115", #9911541 ($90)
+    * (1) inverter, SunSaver SureSine, #2680215 ($220)
+        - for run from trailer to tower (very little line loss vs. DC)
+        - "micro" size: <500W, only in 115Vac (220Vac thru other retailers)
+* components from hardware store (prices from Home Depot):
+    * (1) switch + GFCI outlet, 15A, ($26)
+    * (1) outlet box, single-gang, weatherproof ($4)
+    * (1) weatherproof cover, extra deep, single-gang ($15)
+    * (1) 2-gang outlet box, shallow, metal ($5)
+        - for Trimetric battery monitor
+    * 25ft of THHN, 6AWG, red ($21) <= most DC circuits
+    * 25ft of THHN, 6AWG, black ($21)
+    * 25ft of bare copper grounding wire, 4AWG ($29)
+    * misc. conduit fittings: impossible to shop for online; expect $20-30 total
+    * PVC conduit: plenty around
+* from Radioshack:
+    * 25ft hookup wire, 16AWG, 300V, blue ($11) <= inverter remote signal
+    * 25ft hookup wire, 12AWG, 600V, black ($25) <= inverter AC connections
+    * 25ft hookup wire, 12AWG, 600V, white ($25)
+    * 25ft hookup wire, 12AWG, 600V, green ($25)
+* from Omega:
+    * (1) fiberglass enclosure, 16Hx14Wx8D, snap latch, clear cover, #OM-AMU1648LCCF ($178)
+    * (1) subpanel for 16x14 enclosure, aluminum ($33)
 
-solar panel cable Y-connector, qty (1 each)*(# panels - 1) --> 2 ea?
-  - MC4 branch connector, 2 male -> 1 female; p/n 9999404; $21
-  - MC4 branch connector, 2 female -> 1 male; p/n 9999403; $21
 
-copper grounding wire (Home Depot)
-  - Cerrowire 25ft 6/1 solid bare copper grounding wire; $19.97
-  - Southwire 6 solid bare copper; $0.89/ft
+and if we retain the remote pump design
+---------------------------------------
+
+non-exhaustive preliminary (but fairly stable) list:
+
+* 1 or 2 additional solar panels ($285 ea)
+    - we can get away with only 1 more panel if mitigation strategies are employed
+    - if only 1 more, this list changes modestly
+* 2 more cable extensions ($31 ea)
+* 1 more 10A breaker ($12)
+* (2) breaker, Din rail mount, 40A, #8904041 (2x $12)
+    - replace existing 10A breakers, which are used in the combiner box
+* (1) combiner, 3-bus, Midnite Solar MNPV3, #8910239 ($72)
+* (1) charge controller, MorningStar TriStar 45A, either:
+    - pulse-width modulation: #3680302 ($145)
+    - or max power-point tracking: #3611095 ($415)
+    - pricier model is 10-15% more efficient at recharging; very difficult to say whether marginal cost is worth improved efficiency -- generally, the larger the array is, the more the inefficiency costs
+* either:
+    - supplies to build an independent, field assemble-able, mounting frame since 3 panels won't fit on top of a 5x8 trailer
+    - 6' x 10' trailer instead of 5' x 8'
+    - possibly neither if we live with 2 panels total
 
 
 resources
