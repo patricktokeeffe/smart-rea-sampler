@@ -1,0 +1,15 @@
+
+- Garmin GPS was purchased from Amazon.com and did not come configured for use
+  with CR3000 datalogger
+- Connect GPS to computer using RS-232/USB converter, 12Vdc adapter and a
+  device built previously but not well documented --> TODO
+- Begin communication with GPS using "SNSRXCFG.exe" (v2.90)
+    * autodetected device at 4800 baud
+    * changed settings:
+        ~ baud rate 4800 --> 38400
+        ~ disable 'Position averaging' (position pinning = averaging per communication w/ CSI)
+    * disabled GPGSA, GPGSV, PGRMT; leaves only GPGGA, GPRMC
+    * saved new target settings to 'SNSRXCFG.cfg'
+    * sent new settings to device
+- Tested, confirmed to work with CR3000
+- Remove violet, green wires and tin remaining wires

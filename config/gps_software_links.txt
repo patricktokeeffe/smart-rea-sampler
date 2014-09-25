@@ -1,0 +1,10 @@
+Configuration software:
+    SNSRXCFG_290.exe
+    http://www8.garmin.com/support/download_details.jsp?id=4053
+    http://download.garmin.com/software/SNSRXCFG_290.exe
+    https://web.archive.org/web/20140930001106/http://download.garmin.com/software/SNSRXCFG_290.exe [permalink]
+
+Firmware:
+    GPS16x_390.exe
+    http://www8.garmin.com/support/download_details.jsp?id=4061
+    http://download.garmin.com/software/GPS16x_390.exe
