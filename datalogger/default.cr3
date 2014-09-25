@@ -23,9 +23,19 @@ EndConstTable
 '============================== WIRING ======================================
 Const GPS_COM = Com3 'C5/C6
 
+Const SONIC_COM = Com4 'C7/C8
+
 
 '============================ CONSTANTS =====================================
+Const FAST_INTV = 100 'milliseconds, scan freq.
+Const FAST_BUFF = 10 
 Const STOPFULL = 1 'stop recording when tables are full
+
+Const SONIC_RECLEN = 34 'characters per record
+Const SONIC_BAUD = 38400
+Const SONIC_FORMAT = 3 '8/N/1 @ RS-232 voltages without PakBus pass-thru
+Const SONIC_BUFF = SONIC_RECLEN*2 + 1
+Const SONIC_VAZ = 0 'device-specific value, offset of device azimuth
 
 Const GPS_INTV = 15 'seconds, scan freq.
 Const GPS_MAX_DIFF = 25 'msec, clock tolerance
@@ -33,6 +43,18 @@ Const GPS_MED_NUM = 86400/GPS_INTV 'max # of values included in median calc
 
 
 '============================= VARIABLES ====================================
+Dim sonic_bytes
+Dim sonic_record As String * SONIC_RECLEN
+Public sonic(5)
+Alias sonic(1) = sonic_Ux
+Alias sonic(2) = sonic_Uy
+Alias sonic(3) = sonic_Uz
+Alias sonic(4) = sonic_Ts
+Alias sonic(5) = sonic_diag
+Units sonic = m/s
+Units sonic_Ts = degC
+Units sonic_diag = arb
+
 Dim nmea_str(2) As String * 90
 Public gps16x(15)
 Alias gps16x(1)  = lat_deg        '(+)=North, (-)=South
@@ -63,6 +85,17 @@ Units num_clock_change = occurrences
 
 
 '============================ DATA TABLES ===================================
+DataTable(ts_fast,True,1000) 'FIXME - # records
+  DataInterval(0,FAST_INTV,msec,10)
+  CardOut(STOPFULL,10*60*60*4) '4 hours, FIXME
+  
+  Sample(1,sonic_Ux,IEEE4) 'TODO - FP2? only reported to two decimal places
+  Sample(1,sonic_Uy,IEEE4)
+  Sample(1,sonic_Uz,IEEE4)
+  Sample(1,sonic_Ts,IEEE4)
+  Sample(1,sonic_diag,IEEE4)
+EndTable
+
 DataTable(gps_daily,TRUE,30)
   DataInterval (0,1,Day,10)
   CardOut(STOPFULL,150)
@@ -97,9 +130,24 @@ DisplayMenu("LT REA DAQ", -1)
 EndMenu
 
 
+'============================= SUBROUTINES ==================================
+Sub setup()
+  SerialOpen(SONIC_COM,SONIC_BAUD,SONIC_FORMAT,0,SONIC_BUFF)
+EndSub
+
+
 '============================== PROGRAM =====================================
 BeginProg
+  setup()
   
+  Scan(FAST_INTV,msec,FAST_BUFF,0)
+    SerialInRecord(SONIC_COM,sonic_record,0,SONIC_RECLEN,&h0D,sonic_bytes,11)
+    SplitStr(sonic(1),sonic_record,0,5,0)
+    disable_sonic = (sonic_diag > 0)
+    
+    CallTable(ts_fast)
+  NextScan
+
   SlowSequence
   Scan(GPS_INTV,sec,1,0)
     GPS(gps16x(1),GPS_COM,UTC_OFFSET*3600,GPS_MAX_DIFF,nmea_str(1))
