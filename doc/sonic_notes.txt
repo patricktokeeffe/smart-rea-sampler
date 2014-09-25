@@ -1,0 +1,6 @@
+- Connect sonic to computer using default serial config: 38400/8/N/1
+- Enter menu by sending escape (0x1B) several times
+- Change these settings
+    * E) Error Handling: 2 -> 1 (exclude -> include invalid data)
+    * O) Output rate: 4 -> 10 Hz
+    * S) Serial output format: press 1/Custom, 789AB -> 5BE (UVW, Ts, Err code)
