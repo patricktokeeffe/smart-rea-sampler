@@ -1,0 +1,109 @@
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' Long-term canister-based trace gas flux measurement system
+' using the Relaxed Eddy Accumulation (REA) technique
+'
+' Laboratory for Atmospheric Research
+' Department of Civil & Environmental Engineering
+' Washington State University
+'
+' Licensed under the terms of The MIT License
+'
+' Contact:  Patrick O'Keeffe <pokeeffe@wsu.edu>
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+'manually update this constant with results of `git describe` prior to
+'deployment but do not check-in file with any value other than empty string
+Const VERSION = ""
+
+'========================= DEFAULT SETTINGS =================================
+ConstTable
+  Const UTC_OFFSET = -8 'Pacific Standard Time
+EndConstTable
+
+'============================== WIRING ======================================
+Const GPS_COM = Com3 'C5/C6
+
+
+'============================ CONSTANTS =====================================
+Const STOPFULL = 1 'stop recording when tables are full
+
+Const GPS_INTV = 15 'seconds, scan freq.
+Const GPS_MAX_DIFF = 25 'msec, clock tolerance
+Const GPS_MED_NUM = 86400/GPS_INTV 'max # of values included in median calc
+
+
+'============================= VARIABLES ====================================
+Dim nmea_str(2) As String * 90
+Public gps16x(15)
+Alias gps16x(1)  = lat_deg        '(+)=North, (-)=South
+Alias gps16x(2)  = lat_min
+Alias gps16x(3)  = long_deg       '(+)=East, (-)=West
+Alias gps16x(4)  = long_min
+Alias gps16x(5)  = speed
+Alias gps16x(6)  = course
+Alias gps16x(7)  = mag_var        '(+)=East, (-)=West
+Alias gps16x(8)  = fix_quality
+Alias gps16x(9)  = num_sat
+Alias gps16x(10) = altitude
+Alias gps16x(11) = since_pps
+Alias gps16x(12) = since_gprmc
+Alias gps16x(13) = gps_ready
+Alias gps16x(14) = max_clock_change
+Alias gps16x(15) = num_clock_change
+Units speed = m/s
+Units course = degEofN
+Units mag_var = degEofN
+Units fix_quality = unitless
+Units num_sat = count
+Units altitude = m
+Units since_pps = ms
+Units since_gprmc = s
+Units max_clock_change = ms
+Units num_clock_change = occurrences
+
+
+'============================ DATA TABLES ===================================
+DataTable(gps_daily,TRUE,30)
+  DataInterval (0,1,Day,10)
+  CardOut(STOPFULL,150)
+  Median(1,(lat_deg + lat_min/60),GPS_MED_NUM,IEEE4,(lat_deg=NAN OR lat_min=NAN))
+    FieldNames("latitude_Med")
+    Units latitude_Med = degN
+  Median(1,(long_deg + long_min/60),GPS_MED_NUM,IEEE4,(long_deg=NAN OR long_min=NAN))
+    FieldNames("longitude_Med")
+    Units longitude_Med = degE
+  Median(1,mag_var,GPS_MED_NUM,FP2,mag_var=NAN)
+  Average(1,num_sat,FP2,num_sat=NAN)
+  Median(1,altitude,GPS_MED_NUM,IEEE4,altitude=NAN)
+  Average(1,altitude,FP2,altitude=NAN)
+  Minimum(1,gps_ready,FP2,gps_ready=NAN,0)
+  Sample(1,max_clock_change,UINT2)
+  Sample(1,num_clock_change,UINT2)
+EndTable
+
+
+'============================= CUSTOM MENUS =================================
+Const Yes = True
+Const Cancel = False
+Dim recompile as Boolean
+
+DisplayMenu("LT REA DAQ", -1)
+  SubMenu("Initial setup")
+    MenuItem("Time zone", UTC_OFFSET)
+      MenuPick(UTC_OFFSET,-8,-7,-6,-5,-4) 'FIXME: not valid outside USA
+    MenuRecompile("Recompile?", recompile)
+      MenuPick(Cancel,Yes)
+  EndSubMenu
+EndMenu
+
+
+'============================== PROGRAM =====================================
+BeginProg
+  
+  SlowSequence
+  Scan(GPS_INTV,sec,1,0)
+    GPS(gps16x(1),GPS_COM,UTC_OFFSET*3600,GPS_MAX_DIFF,nmea_str(1))
+    CallTable(gps_daily)
+  NextScan
+EndProg
+
