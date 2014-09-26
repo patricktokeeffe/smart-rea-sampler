@@ -29,6 +29,7 @@ Const SONIC_COM = Com4 'C7/C8
 '============================ CONSTANTS =====================================
 Const FAST_INTV = 100 'milliseconds, scan freq.
 Const FAST_BUFF = 10 
+Const STATS_INTV = 30 'minutes
 Const STOPFULL = 1 'stop recording when tables are full
 
 Const SONIC_RECLEN = 34 'characters per record
@@ -54,6 +55,9 @@ Alias sonic(5) = sonic_diag
 Units sonic = m/s
 Units sonic_Ts = degC
 Units sonic_diag = arb
+
+Public disable_sonic As Boolean
+Public sonic_azimuth = {0}
 
 Dim nmea_str(2) As String * 90
 Public gps16x(15)
@@ -83,6 +87,15 @@ Units since_gprmc = s
 Units max_clock_change = ms
 Units num_clock_change = occurrences
 
+Public work_out(4)
+Alias work_out(1) = sonic_WS_sclr_Avg
+Alias work_out(2) = sonic_WS_rslt_Avg
+Alias work_out(3) = sonic_WD_rslt_Avg
+Alias work_out(4) = sonic_WD_csi_Std
+Units sonic_WS_sclr_Avg = m/s
+Units sonic_WS_rslt_Avg = m/s
+Units sonic_WD_rslt_Avg = degEofTN
+Units sonic_WD_csi_Std = degrees
 
 '============================ DATA TABLES ===================================
 DataTable(ts_fast,True,1000) 'FIXME - # records
@@ -94,6 +107,24 @@ DataTable(ts_fast,True,1000) 'FIXME - # records
   Sample(1,sonic_Uz,IEEE4)
   Sample(1,sonic_Ts,IEEE4)
   Sample(1,sonic_diag,IEEE4)
+EndTable
+
+DataTable(work,True,2)
+  DataInterval(0,STATS_INTV,Min,1)
+  WindVector(1,-1*sonic_Uy,sonic_Ux,IEEE4,disable_sonic,0,1,2)
+EndTable
+
+DataTable(stats,True,1000) 'FIXME - # records
+  DataInterval(0,STATS_INTV,Min,10)
+  CardOut(STOPFULL,1000) 'FIXME - # records
+
+  Average(1,sonic_Ts,FP2,disable_sonic or sonic_Ts=NAN)
+  StdDev (1,sonic_Ts,FP2,disable_sonic)
+  StdDev (1,sonic_Uz,FP2,disable_sonic)
+  Sample (1,sonic_WS_sclr_Avg,FP2)
+  Sample (1,sonic_WS_rslt_Avg,FP2)
+  Sample (1,sonic_WD_rslt_Avg,FP2)
+  Sample (1,sonic_WD_csi_Std,FP2)
 EndTable
 
 DataTable(gps_daily,TRUE,30)
@@ -118,7 +149,7 @@ EndTable
 '============================= CUSTOM MENUS =================================
 Const Yes = True
 Const Cancel = False
-Dim recompile as Boolean
+Dim recompile As Boolean
 
 DisplayMenu("LT REA DAQ", -1)
   SubMenu("Initial setup")
@@ -143,9 +174,21 @@ BeginProg
   Scan(FAST_INTV,msec,FAST_BUFF,0)
     SerialInRecord(SONIC_COM,sonic_record,0,SONIC_RECLEN,&h0D,sonic_bytes,11)
     SplitStr(sonic(1),sonic_record,0,5,0)
-    disable_sonic = (sonic_diag > 0)
+    disable_sonic = (sonic_diag > 0 OR sonic_diag=NAN OR sonic_Ts=NAN OR _
+                                sonic_Ux=NAN OR sonic_Uy=NAN or sonic_Uz=NAN)
     
     CallTable(ts_fast)
+    CallTable(work)
+    If (work.Output(1,1)) Then
+      GetRecord(work_out(1),work,1)
+      If (sonic_WS_sclr_Avg = NAN AND sonic_WS_rslt_Avg = NAN) Then
+        sonic_WD_rslt_Avg = NAN
+        sonic_WD_csi_Std = NAN
+      Else
+        sonic_WD_rslt_Avg = (Round(sonic_WD_rslt_Avg,0)+sonic_azimuth) MOD 360
+      EndIf
+    EndIf
+    CallTable(stats)
   NextScan
 
   SlowSequence
