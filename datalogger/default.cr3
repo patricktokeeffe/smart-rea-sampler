@@ -21,22 +21,32 @@ ConstTable
 EndConstTable
 
 '============================== WIRING ======================================
-Const GPS_COM = Com3 'C5/C6
-
 Const SONIC_COM = Com4 'C7/C8
+Const GPS_COM = Com3   'C5/C6
+
+Const HMP_T_DF = 13  'DF 13 H/L
+Const HMP_RH_DF = 14 'DF 14 H/L
 
 
 '============================ CONSTANTS =====================================
+Const INTEG = 250     'analog integration time
 Const FAST_INTV = 100 'milliseconds, scan freq.
 Const FAST_BUFF = 10 
-Const STATS_INTV = 30 'minutes
-Const STOPFULL = 1 'stop recording when tables are full
+Const SLOW_INTV = 5   'seconds, scan freq.
+Const SLOW_BUFF = 5
+Const STATS_INTV = 30 'minutes, stats output
+Const STOPFULL = 1    'stop recording when tables are full
 
 Const SONIC_RECLEN = 34 'characters per record
 Const SONIC_BAUD = 38400
 Const SONIC_FORMAT = 3 '8/N/1 @ RS-232 voltages without PakBus pass-thru
 Const SONIC_BUFF = SONIC_RECLEN*2 + 1
 Const SONIC_VAZ = 0 'device-specific value, offset of device azimuth
+
+Const HMP_T_OFF   = -80
+Const HMP_T_MULT  = (60 - HMP_T_OFF)/1000 '-80 to +60 *C over 1V
+Const HMP_RH_OFF  = 0
+Const HMP_RH_MULT = (100 - HMP_RH_OFF)/1000 '0-100% over 1V
 
 Const GPS_INTV = 15 'seconds, scan freq.
 Const GPS_MAX_DIFF = 25 'msec, clock tolerance
@@ -58,6 +68,14 @@ Units sonic_diag = arb
 
 Public disable_sonic As Boolean
 Public sonic_azimuth = {0}
+
+Public hmp(3)
+Alias hmp(1) = hmp_T
+Alias hmp(2) = hmp_RH
+Alias hmp(3) = hmp_e
+Units hmp_T = degC
+Units hmp_RH = %
+Units hmp_e = kPa
 
 Dim nmea_str(2) As String * 90
 Public gps16x(15)
@@ -87,15 +105,29 @@ Units since_gprmc = s
 Units max_clock_change = ms
 Units num_clock_change = occurrences
 
-Public work_out(4)
+Public work_out(6)
 Alias work_out(1) = sonic_WS_sclr_Avg
 Alias work_out(2) = sonic_WS_rslt_Avg
 Alias work_out(3) = sonic_WD_rslt_Avg
 Alias work_out(4) = sonic_WD_csi_Std
+Alias work_out(5) = hmp_T_Avg
+Alias work_out(6) = hmp_e_Avg
 Units sonic_WS_sclr_Avg = m/s
 Units sonic_WS_rslt_Avg = m/s
 Units sonic_WD_rslt_Avg = degEofTN
 Units sonic_WD_csi_Std = degrees
+Units hmp_T_Avg = degC
+Units hmp_e_Avg = kPa
+
+Public derived(2)
+Alias derived(1) = hmp_e_sat_Avg
+Alias derived(2) = hmp_RH_Avg
+Units hmp_e_sat_Avg = kPa
+Units hmp_RH_Avg = %
+
+Dim just_had_slow_scan As Boolean
+Dim inbetween_slow_scan As Boolean
+
 
 '============================ DATA TABLES ===================================
 DataTable(ts_fast,True,1000) 'FIXME - # records
@@ -109,9 +141,19 @@ DataTable(ts_fast,True,1000) 'FIXME - # records
   Sample(1,sonic_diag,IEEE4)
 EndTable
 
+DataTable(ts_slow,True,1000) 'FIXME - # records
+  DataInterval(0,SLOW_INTV,sec,10)
+  CardOut(STOPFULL,1000) 'FIXME - # records
+  
+  Sample(1,hmp_T,IEEE4)
+  Sample(1,hmp_RH,IEEE4)
+EndTable
+
 DataTable(work,True,2)
   DataInterval(0,STATS_INTV,Min,1)
   WindVector(1,-1*sonic_Uy,sonic_Ux,IEEE4,disable_sonic,0,1,2)
+  Average(1,hmp_T,IEEE4,(inbetween_slow_scan OR hmp_T=NAN))
+  Average(1,hmp_e,IEEE4,(inbetween_slow_scan OR hmp_e=NAN))
 EndTable
 
 DataTable(stats,True,1000) 'FIXME - # records
@@ -125,6 +167,10 @@ DataTable(stats,True,1000) 'FIXME - # records
   Sample (1,sonic_WS_rslt_Avg,FP2)
   Sample (1,sonic_WD_rslt_Avg,FP2)
   Sample (1,sonic_WD_csi_Std,FP2)
+  
+  Sample (1,hmp_T_Avg,FP2)
+  Sample (1,hmp_RH_Avg,FP2)
+  Sample (1,hmp_e_Avg,FP2)
 EndTable
 
 DataTable(gps_daily,TRUE,30)
@@ -181,14 +227,35 @@ BeginProg
     CallTable(work)
     If (work.Output(1,1)) Then
       GetRecord(work_out(1),work,1)
+      
       If (sonic_WS_sclr_Avg = NAN AND sonic_WS_rslt_Avg = NAN) Then
         sonic_WD_rslt_Avg = NAN
         sonic_WD_csi_Std = NAN
       Else
         sonic_WD_rslt_Avg = (Round(sonic_WD_rslt_Avg,0)+sonic_azimuth) MOD 360
       EndIf
+      
+      SatVP(hmp_e_sat_Avg, hmp_T_Avg)
+      hmp_RH_Avg = 100*hmp_e_Avg/hmp_e_sat_Avg
+      'DewPoint(hmp_Tdew_Avg, hmp_T_Avg, hmp_RH_Avg) 'TODO ????
     EndIf
     CallTable(stats)
+    
+    inbetween_slow_scan = True
+    If (just_had_slow_scan) Then
+      just_had_slow_scan = False
+      inbetween_slow_scan = False
+    EndIf
+  NextScan
+
+  SlowSequence
+  Scan(SLOW_INTV,sec,3,0)
+    VoltDiff(hmp_T,1,mv1000,HMP_T_DF,True,0,INTEG,HMP_T_MULT,HMP_T_OFF)
+    VoltDiff(hmp_RH,1,mv1000,HMP_RH_DF,True,0,INTEG,HMP_RH_MULT,HMP_RH_OFF)
+    VaporPressure(hmp_e, hmp_T, hmp_RH)
+    
+    CallTable(ts_slow)
+    just_had_slow_scan = True
   NextScan
 
   SlowSequence
