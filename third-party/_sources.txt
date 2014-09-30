@@ -11,6 +11,9 @@ http://s.campbellsci.com/documents/us/manuals/loggernet.pdf    CSI_LoggerNet_Man
 http://s.campbellsci.com/documents/us/manuals/nl115.pdf    CSI_NL115_Ethernet_CF_Module_Manual.pdf
 http://s.campbellsci.com/documents/us/manuals/hmp155a.pdf    CSI_Vaisala_HMP155A_Temp-RH_Probe_Manual.pdf
 http://static.garmincdn.com/pumac/GPS_16x_tech_specs.pdf    Garmin_GPS16x_tech_specs.pdf
+https://web.archive.org/web/20140930223515/https://www.adafruit.com/datasheets/KD50G21-40NT-A1.pdf    HDMI_display_datasheet.pdf
+https://web.archive.org/web/20140930222706/https://www.adafruit.com/datasheets/PCB800168.pdf    HDMI_display_driver_datasheet.pdf
+https://web.archive.org/web/20140930223013/https://www.adafruit.com/datasheets/PCB800023%20Keyboard.pdf    HDMI_display_keyboard_datasheet.pdf
 http://www.hirose.co.jp/cataloge_hp/en_DF1B_20130411.pdf    Hirose_connectors_DF1B_series_datasheet.pdf
 http://www.midnitesolar.com/pdfs/DC%20Ground%20Fault%20Protectors%20explained.pdf    MidNite_Solar_DC_Ground_Fault_Protectors_explained.pdf
 http://www.midnitesolar.com/pdfs/DC-GFP.pdf    MidNite_Solar_DC-GFP_Installation.pdf
@@ -41,6 +44,8 @@ http://www.omega.com/Pressure/pdf/PX409-USBH.pdf    Omega_pressure_PX409-USBH.pd
 http://www.opto22.com/documents/0509_Std_Dig_4_Ch_Outputs_data_sheet.pdf    Opto22_rack_4Ch_output_datasheet.pdf
 http://www.opto22.com/documents/0450_Std_Dig_DC_Outputs_data_sheet.pdf    Opto22_relay_DC_output_datasheet.pdf
 http://parker.com/literature/Literature%20Files/Precision%20Fluidics%20Division/UpdatedFiles/Series%209%20Data%20Sheet.pdf    Parker_Series_9_valve_datasheet.pdf
+https://web.archive.org/web/20140930211553/http://www.element14.com/community/servlet/JiveServlet/downloadBody/68203-102-6-294412/GPIO.png    Raspberry_Pi_B+_GPIO_pinout.png
+https://web.archive.org/web/20140728090846/http://www.element14.com/community/servlet/JiveServlet/downloadBody/68376-102-1-295702/RPI-BPLUS-V1_2-SCHEMATIC-REDUCED.pdf    Raspberry_Pi_B+_schematic.pdf
 http://www.youngusa.com/Manuals/81000VRE-90(G).pdf    RM_Young_Anemometer_81000VRE.pdf
 http://pdf.wholesalesolar.com/battery-folder/Rolls_Battery_Manual.pdf    Rolls-Surrette_Battery_Manual.pdf
 http://pdf.wholesalesolar.com/battery-folder/surrette/S-550.pdf    Rolls-Surrette_battery_S-550_specs.pdf
