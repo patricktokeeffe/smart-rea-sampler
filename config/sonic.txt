@@ -1,0 +1,29 @@
+Sonic anemometer configuration
+------------------------------
+
+### Junction box
+
+* Appendix A of the user manual illustrates RS-232 connections
+* Default output is RS-232 so no changes to jumper block W6 are required
+* Wire color convention chosen for compatibility with Campbell Scientific 
+  serial cable dongles:
+
+| Signal     | Color  |
+|------------| -------|
+| +PWR       | red    |
+| PWR REF    | black  |
+| EARTH GND  | green  |
+| TX A2      | brown  |
+| RX B2      | white  |
+| SERIAL REF | yellow |
+
+### Software setup
+
+* No changes to default RS-232 comm settings required: 38400/8/N/1
+* Settings to modify:
+    * E) Error handling: 2 --> 1 (exclude --> include bad data)
+    * O) Output rate: 4 --> 10 (Hz)
+    * S) Serial output format: 789AB --> 5BE
+        * 5: component wind, U/V/W (m/s)
+        * B: sonic temperature (degC)
+        * E: error code (non-zero for error)
