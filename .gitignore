@@ -1,4 +1,5 @@
 
+*.dxf~
 ~$*.xlsx
 
 /third-party/*.pdf
