@@ -2,3 +2,4 @@
 ~$*.xlsx
 
 /third-party/*.pdf
+/third-party/*.jpg

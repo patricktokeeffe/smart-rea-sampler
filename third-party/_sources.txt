@@ -5,6 +5,7 @@ http://s.campbellsci.com/documents/us/manuals/loggernet.pdf    CSI_LoggerNet_Man
 http://s.campbellsci.com/documents/us/manuals/nl115.pdf    CSI_NL115_Ethernet_CF_Module_Manual.pdf
 http://s.campbellsci.com/documents/us/manuals/hmp155a.pdf    CSI_Vaisala_HMP155A_Temp-RH_Probe_Manual.pdf
 http://static.garmincdn.com/pumac/GPS_16x_tech_specs.pdf    Garmin_GPS16x_tech_specs.pdf
+http://www.nrel.gov/gis/images/map_pv_national_hi-res_200.jpg    NREL_US_Solar_Resource_Map_Hi-Res.jpg
 http://www.okeefecontrols.com/PDF/cat%2011%20Rev%207%2B_web.pdf    O'Keefe_Controls_orifice_catalog.pdf
 http://www.omega.com/Pressure/pdf/PS_SNUBBERS.pdf    Omega_pressure_snubber.pdf
 http://www.omega.com/Pressure/pdf/PX309-5V.pdf    Omega_pressure_PX309-5V.pdf
@@ -15,3 +16,4 @@ http://www.opto22.com/documents/0509_Std_Dig_4_Ch_Outputs_data_sheet.pdf    Opto
 http://www.opto22.com/documents/0450_Std_Dig_DC_Outputs_data_sheet.pdf    Opto22_relay_DC_output_datasheet.pdf
 http://parker.com/literature/Literature%20Files/Precision%20Fluidics%20Division/UpdatedFiles/Series%209%20Data%20Sheet.pdf    Parker_Series_9_valve_datasheet.pdf
 http://www.youngusa.com/Manuals/81000VRE-90(G).pdf    RM_Young_Anemometer_81000VRE.pdf
+http://www.ecy.wa.gov/climatechange/maps/solar/solar_state.pdf    WA_ECY_solar_potential_map.pdf
