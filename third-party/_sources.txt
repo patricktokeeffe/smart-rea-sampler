@@ -34,6 +34,7 @@ http://support.morningstarcorp.com/wp-content/uploads/2014/07/MS-ZMAN-RM04-A.pdf
 http://www.morningstarcorp.com/wp-content/uploads/2014/02/SureSineENG_R2_1_08.pdf    MorningStar_SureSine_specs.pdf
 http://support.morningstarcorp.com/wp-content/uploads/2014/07/ALL.DIG_.Parallel_Batt_String_Wiring.01.EN_.pdf    MorningStar_tech_note_battery_wiring.pdf
 http://support.morningstarcorp.com/wp-content/uploads/2014/07/ALL.DIG_.Correct_Inverter_Wiring.01.EN_.pdf    MorningStar_tech_note_inverter_wiring.pdf
+http://www.nrel.gov/gis/images/map_pv_national_hi-res_200.jpg    NREL_US_Solar_Resource_Map_Hi-Res.jpg
 http://www.okeefecontrols.com/PDF/cat%2011%20Rev%207%2B_web.pdf    O'Keefe_Controls_orifice_catalog.pdf
 http://www.omega.com/Auto/pdf/OM-AMU.pdf    Omega_enclosure_OM-AMU.pdf
 http://www.omega.com/Pressure/pdf/PS_SNUBBERS.pdf    Omega_pressure_snubber.pdf
@@ -50,3 +51,4 @@ http://www.youngusa.com/Manuals/81000VRE-90(G).pdf    RM_Young_Anemometer_81000V
 http://pdf.wholesalesolar.com/battery-folder/Rolls_Battery_Manual.pdf    Rolls-Surrette_Battery_Manual.pdf
 http://pdf.wholesalesolar.com/battery-folder/surrette/S-550.pdf    Rolls-Surrette_battery_S-550_specs.pdf
 http://www.wholesalesolar.com/pdf.folder/module%20pdf%20folder/SLP150S-12-specs.pdf    SolarLand_SLP150S-12-specs.pdf
+http://www.ecy.wa.gov/climatechange/maps/solar/solar_state.pdf    WA_ECY_solar_potential_map.pdf
