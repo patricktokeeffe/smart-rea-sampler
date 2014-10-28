@@ -20,6 +20,7 @@ ConstTable
   Const UTC_OFFSET = -8 'Pacific Standard Time
 EndConstTable
 
+
 '============================== WIRING ======================================
 Const SONIC_COM = Com4 'C7/C8
 Const GPS_COM = Com3   'C5/C6
@@ -27,8 +28,25 @@ Const GPS_COM = Com3   'C5/C6
 Const HMP_T_DF = 13  'DF 13 H/L
 Const HMP_RH_DF = 14 'DF 14 H/L
 
+Const CTRL_UP_VLV = 1 'C1
+Const CTRL_DN_VLV = 2 'C2
+'reserved              C3
+Const CTRL_PUMPS  = 4 'C4
+
+Const P_CAN_UP_SE = 11 'SE11/DF6H
+Const P_CAN_DN_SE = 13 'SE13/DF7H
+Const P_PMP_UP_SE = 1  'SE1/DF1H
+Const P_PMP_DN_SE = 3  'SE3/DF2H
+Const P_BARO_SE   = 15 'SE15/DF8H
+
+Const SW12_CAN_P = 9  'SW12-1
+Const SW12_PMP_P = 10 'SW12-2
+
 
 '============================ CONSTANTS =====================================
+Const MBAR_PER_PSI = 68.947573 'mbar/psia
+Const MBAR_PER_INHG = 33.864882 'mbar/inHg
+
 Const INTEG = 250     'analog integration time
 Const FAST_INTV = 100 'milliseconds, scan freq.
 Const FAST_BUFF = 10 
@@ -47,6 +65,19 @@ Const HMP_T_OFF   = -80
 Const HMP_T_MULT  = (60 - HMP_T_OFF)/1000 '-80 to +60 *C over 1V
 Const HMP_RH_OFF  = 0
 Const HMP_RH_MULT = (100 - HMP_RH_OFF)/1000 '0-100% over 1V
+
+Const P_CAN_UP_OFF = MBAR_PER_PSI*0
+Const P_CAN_UP_MLT = MBAR_PER_PSI*(30-P_CAN_UP_OFF)/5000 '0-30 psia over 5Vdc
+Const P_CAN_DN_OFF = P_CAN_UP_OFF
+Const P_CAN_DN_MLT = P_CAN_UP_MLT
+
+Const P_PMP_UP_OFF = MBAR_PER_PSI*0
+Const P_PMP_UP_MLT = MBAR_PER_PSI*(15-P_PMP_UP_OFF)/5000 '0-15 psia over 5Vdc
+Const P_PMP_DN_OFF = P_PMP_UP_OFF
+Const P_PMP_DN_MLT = P_PMP_UP_MLT
+
+Const P_BARO_OFF = MBAR_PER_INHG*16
+Const P_BARO_MLT = MBAR_PER_INHG*(32-P_BARO_OFF)/5000 '16-32 inHg over 5Vdc
 
 Const GPS_INTV = 15 'seconds, scan freq.
 Const GPS_MAX_DIFF = 25 'msec, clock tolerance
@@ -76,6 +107,14 @@ Alias hmp(3) = hmp_e
 Units hmp_T = degC
 Units hmp_RH = %
 Units hmp_e = kPa
+
+Public pressure(5)
+Alias pressure(1) = press_can_UP
+Alias pressure(2) = press_can_DN
+Alias pressure(3) = press_pump_UP
+Alias pressure(4) = press_pump_DN
+Alias pressure(5) = press_baro
+Units pressure = mbar
 
 Dim nmea_str(2) As String * 90
 Public gps16x(15)
@@ -147,6 +186,11 @@ DataTable(ts_slow,True,1000) 'FIXME - # records
   
   Sample(1,hmp_T,IEEE4)
   Sample(1,hmp_RH,IEEE4)
+  Sample(1,press_can_UP,IEEE4)
+  Sample(1,press_can_DN,IEEE4)
+  Sample(1,press_pump_UP,IEEE4)
+  Sample(1,press_pump_DN,IEEE4)
+  Sample(1,press_baro,IEEE4)
 EndTable
 
 DataTable(work,True,2)
@@ -171,6 +215,12 @@ DataTable(stats,True,1000) 'FIXME - # records
   Sample (1,hmp_T_Avg,FP2)
   Sample (1,hmp_RH_Avg,FP2)
   Sample (1,hmp_e_Avg,FP2)
+  
+  Average(1,press_can_UP,IEEE4,(inbetween_slow_scan OR press_can_UP=NAN))
+  Average(1,press_can_DN,IEEE4,(inbetween_slow_scan OR press_can_DN=NAN))
+  Average(1,press_pump_UP,IEEE4,(inbetween_slow_scan OR press_pump_UP=NAN))
+  Average(1,press_pump_DN,IEEE4,(inbetween_slow_scan OR press_pump_DN=NAN))
+  Average(1,press_baro,IEEE4,(inbetween_slow_scan OR press_baro=NAN))
 EndTable
 
 DataTable(gps_daily,TRUE,30)
@@ -210,6 +260,8 @@ EndMenu
 '============================= SUBROUTINES ==================================
 Sub setup()
   SerialOpen(SONIC_COM,SONIC_BAUD,SONIC_FORMAT,0,SONIC_BUFF)
+  PortSet(SW12_CAN_P,True)
+  PortSet(SW12_PMP_P,True)
 EndSub
 
 
@@ -253,7 +305,13 @@ BeginProg
     VoltDiff(hmp_T,1,mv1000,HMP_T_DF,True,0,INTEG,HMP_T_MULT,HMP_T_OFF)
     VoltDiff(hmp_RH,1,mv1000,HMP_RH_DF,True,0,INTEG,HMP_RH_MULT,HMP_RH_OFF)
     VaporPressure(hmp_e, hmp_T, hmp_RH)
-    
+
+    VoltSe(press_can_UP,1,mv5000,P_CAN_UP_SE,True,0,INTEG, P_CAN_UP_MLT,P_CAN_UP_OFF)
+    VoltSe(press_can_DN,1,mv5000,P_CAN_DN_SE,True,0,INTEG, P_CAN_DN_MLT,P_CAN_DN_OFF)
+    VoltSe(press_pump_UP,1,mv5000,P_PMP_UP_SE,True,0,INTEG, P_PMP_UP_MLT,P_PMP_UP_OFF)
+    VoltSe(press_pump_DN,1,mv5000,P_PMP_DN_SE,True,0,INTEG, P_PMP_DN_MLT,P_PMP_DN_OFF)
+    VoltSe(press_baro,1,mv5000,P_BARO_SE,True,0,INTEG, P_BARO_MLT,P_BARO_OFF)
+
     CallTable(ts_slow)
     just_had_slow_scan = True
   NextScan
