@@ -264,12 +264,20 @@ Sub setup()
   PortSet(SW12_PMP_P,True)
 EndSub
 
+Public onoff
 
 '============================== PROGRAM =====================================
 BeginProg
   setup()
   
   Scan(FAST_INTV,msec,FAST_BUFF,0)
+    ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    If TimeIntoInterval(0,1,Min) Then
+      onoff = NOT onoff
+      PortSet(CTRL_PUMPS,onoff)
+    EndIf
+    ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
     SerialInRecord(SONIC_COM,sonic_record,0,SONIC_RECLEN,&h0D,sonic_bytes,11)
     SplitStr(sonic(1),sonic_record,0,5,0)
     disable_sonic = (sonic_diag > 0 OR sonic_diag=NAN OR sonic_Ts=NAN OR _
