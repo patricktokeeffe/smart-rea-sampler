@@ -28,8 +28,8 @@ Const GPS_COM = Com3   'C5/C6
 Const HMP_T_DF = 13  'DF 13 H/L
 Const HMP_RH_DF = 14 'DF 14 H/L
 
-Const CTRL_UP_VLV = 1 'C1
-Const CTRL_DN_VLV = 2 'C2
+Const CTRL_VLV_UP = 1 'C1
+Const CTRL_VLV_DN = 2 'C2
 'reserved              C3
 Const CTRL_PUMPS  = 4 'C4
 
@@ -46,6 +46,7 @@ Const SW12_PMP_P = 10 'SW12-2
 '============================ CONSTANTS =====================================
 Const MBAR_PER_PSI = 68.947573 'mbar/psia
 Const MBAR_PER_INHG = 33.864882 'mbar/inHg
+Const PI = 3.14159
 
 Const INTEG = 250     'analog integration time
 Const FAST_INTV = 100 'milliseconds, scan freq.
@@ -144,13 +145,36 @@ Units since_gprmc = s
 Units max_clock_change = ms
 Units num_clock_change = occurrences
 
-Public work_out(6)
-Alias work_out(1) = sonic_WS_sclr_Avg
-Alias work_out(2) = sonic_WS_rslt_Avg
-Alias work_out(3) = sonic_WD_rslt_Avg
-Alias work_out(4) = sonic_WD_csi_Std
-Alias work_out(5) = hmp_T_Avg
-Alias work_out(6) = hmp_e_Avg
+'-------------------------- PROCESSING -------------------------------------
+Public cov_sonic(1,4) '= [ [Ts, Ux, Uy, Uz] ]
+
+Public work_out(20)
+Alias work_out(1)  = Ux_Avg '4x Average()
+Alias work_out(2)  = Uy_Avg
+Alias work_out(3)  = Uz_Avg
+Alias work_out(4)  = Ts_Avg
+Alias work_out(5)  = Ts_Std 'Covariance(), 10 vals
+Alias work_out(6)  = cov_Ts_Ux
+Alias work_out(7)  = cov_Ts_Uy
+Alias work_out(8)  = cov_Ts_Uz
+Alias work_out(9)  = Ux_Std
+Alias work_out(10) = cov_Ux_Uy
+Alias work_out(11) = cov_Ux_Uz
+Alias work_out(12) = Uy_Std
+Alias work_out(13) = cov_Uy_Uz
+Alias work_out(14) = Uz_Std
+Alias work_out(15) = sonic_WS_sclr_Avg 'WindVector, 4 vals
+Alias work_out(16) = sonic_WS_rslt_Avg
+Alias work_out(17) = sonic_WD_rslt_Avg
+Alias work_out(18) = sonic_WD_csi_Std
+Alias work_out(19) = hmp_T_Avg '2x Average()
+Alias work_out(20) = hmp_e_Avg
+Units Ux_Avg = m/s
+Units Uy_Avg = m/s
+Units Uz_Avg = m/s
+Units Ts_Avg = degC
+Units Ts_Std = degC
+Units Uz_Std = m/s
 Units sonic_WS_sclr_Avg = m/s
 Units sonic_WS_rslt_Avg = m/s
 Units sonic_WD_rslt_Avg = degEofTN
@@ -163,6 +187,36 @@ Alias derived(1) = hmp_e_sat_Avg
 Alias derived(2) = hmp_RH_Avg
 Units hmp_e_sat_Avg = kPa
 Units hmp_RH_Avg = %
+
+Public Uz_rot 'real-time coordinate-rotated
+Units Uz_rot = m/s
+
+Dim sqrt_UV
+Dim sqrt_UVW
+Public rot_angles(6)
+Alias rot_angles(1) = CE
+Alias rot_angles(2) = SE
+Alias rot_angles(3) = CT
+Alias rot_angles(4) = ST
+Alias rot_angles(5) = eta
+Alias rot_angles(6) = theta
+Units eta = degrees
+Units theta = degrees
+
+Public rotated(4) 'stream-wise coordinates
+Alias rotated(1) = U_Avg
+Alias rotated(2) = V_Avg
+Alias rotated(3) = W_Avg
+Alias rotated(4) = W_Std
+Units rotated = m/s
+
+'----------------------------- OPERATION -----------------------------------
+Public deadband
+Dim neg_deadband
+Units deadband = m/s
+
+Public vlv_up_ON As Boolean
+Public vlv_dn_ON As Boolean
 
 Dim just_had_slow_scan As Boolean
 Dim inbetween_slow_scan As Boolean
@@ -195,6 +249,11 @@ EndTable
 
 DataTable(work,True,2)
   DataInterval(0,STATS_INTV,Min,1)
+  Average(1,sonic_Ux,IEEE4,disable_sonic)
+  Average(1,sonic_Uy,IEEE4,disable_sonic)
+  Average(1,sonic_Uz,IEEE4,disable_sonic)
+  Average(1,sonic_Ts,IEEE4,disable_sonic)
+  Covariance(4,cov_sonic(1,1),IEEE4,disable_sonic,10)
   WindVector(1,-1*sonic_Uy,sonic_Ux,IEEE4,disable_sonic,0,1,2)
   Average(1,hmp_T,IEEE4,(inbetween_slow_scan OR hmp_T=NAN))
   Average(1,hmp_e,IEEE4,(inbetween_slow_scan OR hmp_e=NAN))
@@ -206,7 +265,7 @@ DataTable(stats,True,1000) 'FIXME - # records
 
   Average(1,sonic_Ts,FP2,disable_sonic or sonic_Ts=NAN)
   StdDev (1,sonic_Ts,FP2,disable_sonic)
-  StdDev (1,sonic_Uz,FP2,disable_sonic)
+  StdDev (1,sonic_Uz,FP2,disable_sonic) 'TODO ? replace this with Uz_Std?
   Sample (1,sonic_WS_sclr_Avg,FP2)
   Sample (1,sonic_WS_rslt_Avg,FP2)
   Sample (1,sonic_WD_rslt_Avg,FP2)
@@ -221,6 +280,11 @@ DataTable(stats,True,1000) 'FIXME - # records
   Average(1,press_pump_UP,IEEE4,(inbetween_slow_scan OR press_pump_UP=NAN))
   Average(1,press_pump_DN,IEEE4,(inbetween_slow_scan OR press_pump_DN=NAN))
   Average(1,press_baro,IEEE4,(inbetween_slow_scan OR press_baro=NAN))
+  
+  Sample(1,Uz_Std,IEEE4)
+  Sample(1,W_Std,IEEE4)
+  Sample(1,eta,IEEE4)
+  Sample(1,theta,IEEE4)
 EndTable
 
 DataTable(gps_daily,TRUE,30)
@@ -258,7 +322,20 @@ EndMenu
 
 
 '============================= SUBROUTINES ==================================
+Sub update_deadband() 'FIXME TODO
+  deadband = 0.1
+  neg_deadband = -1*deadband
+EndSub
+
+Sub reset_rotangles()
+  Move(rot_angles(1),6,0,1)
+  CT = 1.0
+EndSub
+
 Sub setup()
+  update_deadband()
+  reset_rotangles() 'TODO retain rotation angles across power cycles
+  
   SerialOpen(SONIC_COM,SONIC_BAUD,SONIC_FORMAT,0,SONIC_BUFF)
   PortSet(SW12_CAN_P,True)
   PortSet(SW12_PMP_P,True)
@@ -282,12 +359,47 @@ BeginProg
     SplitStr(sonic(1),sonic_record,0,5,0)
     disable_sonic = (sonic_diag > 0 OR sonic_diag=NAN OR sonic_Ts=NAN OR _
                                 sonic_Ux=NAN OR sonic_Uy=NAN or sonic_Uz=NAN)
-    
+    Uz_rot = sonic_Uz*CT - sonic_Uz*ST*CE - sonic_Uy*ST*SE
+    vlv_up_ON = False
+    vlv_dn_ON = False
+    If (False) Then 'TODO If (NOT is_running) Then
+      'do nothing
+    ElseIf (Uz_rot >= deadband) Then
+      vlv_up_ON = True
+    ElseIf (Uz_rot <= neg_deadband) Then
+      vlv_dn_ON = True
+    EndIf
+    PortSet(CTRL_VLV_UP,vlv_up_ON) 'HINT use PortSet (measurment task) not
+    PortSet(CTRL_VLV_DN,vlv_dn_ON) 'WriteIO (processing task = delayed)
+
     CallTable(ts_fast)
     CallTable(work)
     If (work.Output(1,1)) Then
       GetRecord(work_out(1),work,1)
+
+      sqrt_UV = SQR(Ux_Avg^2 + Uy_Avg^2)
+      sqrt_UVW = SQR(Ux_Avg^2 + Uy_Avg^2 + Uz_Avg^2)
+      CE = Ux_Avg/sqrt_UV
+      SE = Uy_Avg/sqrt_UV
+      CT = sqrt_UV/sqrt_UVW
+      ST = Uz_Avg/sqrt_UVW
+      If (CE=NAN OR SE=NAN OR CT=NAN OR ST=NAN) Then
+        reset_rotangles()
+      Else
+        eta = ATN2(SE,CE)*180/PI
+        theta = ATN2(ST,CT)*180/PI
+      EndIf
+      U_Avg = Ux_Avg*CT*CE + Uy_Avg*CT*SE + Uz_Avg*ST
+      V_Avg = Uy_Avg*CE - Ux_Avg*SE
+      W_Avg = Uz_Avg*CT - Ux_Avg*ST*SE - Uy_Avg*ST*SE
+      'HINT in following line *_Std values are still covariances
+      W_Std = SQR(Uz_Std*CT*CT + Ux_Std*ST*ST*CE*CE + Uy_Std*ST*ST*SE*SE - 2*cov_Uy_Uz*CT*ST*SE + 2*cov_Ux_Uy*CE*ST*ST*SE)
+      'now convert cov -> std
+      Uz_Std = SQR(Uz_Std)
+      Ts_Std = SQR(Ts_Std)
       
+      update_deadband()
+
       If (sonic_WS_sclr_Avg = NAN AND sonic_WS_rslt_Avg = NAN) Then
         sonic_WD_rslt_Avg = NAN
         sonic_WD_csi_Std = NAN
