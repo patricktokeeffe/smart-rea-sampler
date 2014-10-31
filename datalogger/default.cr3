@@ -18,6 +18,10 @@ Const VERSION = ""
 '========================= DEFAULT SETTINGS =================================
 ConstTable
   Const UTC_OFFSET = -8 'Pacific Standard Time
+  
+  Const DECLIN_MIN = -35 'deg E of TN
+  Const DECLIN_MAX = 35 'deg E of TN
+  Const DBMULT_MAX = 2 'ratio
 EndConstTable
 
 
@@ -215,6 +219,9 @@ Public deadband
 Dim neg_deadband
 Units deadband = m/s
 
+Public azimuth
+Units azimuth = degEofTN
+
 Public vlv_up_ON As Boolean
 Public vlv_dn_ON As Boolean
 
@@ -222,6 +229,66 @@ Public is_running As Boolean
 
 Dim just_had_slow_scan As Boolean
 Dim inbetween_slow_scan As Boolean
+
+
+'========================= SETTINGS RETENTION ===============================
+Dim filehandle As Long
+Const WRITEFILE = 0
+Const READFILE = 1
+
+'----- DEFAULT SETTINGS -----
+Const SETTINGS_FILE = "CPU:rea_settings.dat"
+Const NUM_SETTINGS = {11}
+
+Const DEF_DBAND_MULT = 0.85 '0 < X <= 1
+Const DEF_DBAND_MIN = 0.05 'm/s
+Const DEF_DBAND_DEF = 0.1 'm/s
+Const DEF_SONIC_AZIMUTH = -1 'degEofN, -1=disabled
+Const DEF_SONIC_HEIGHT = 0 'm, 0=disabled
+Const DEF_SITE_DECLIN = 0 'degEofTN, 0=disabled
+Const DEF_SITE_RUFNESS = 0 'm, 0=disabled
+Const DEF_SITE_FETCH_N = 0 'm, 0=disabled
+Const DEF_SITE_FETCH_E = 0 'm, 0=disabled
+Const DEF_SITE_FETCH_S = 0 'm, 0=disabled
+Const DEF_SITE_FETCH_W = 0 'm, 0=disabled
+
+Dim choice(NUM_SETTINGS)
+Alias choice(1)  = ch_dband_mult
+Alias choice(2)  = ch_dband_min
+Alias choice(3)  = ch_dband_def
+Alias choice(4)  = ch_sonic_azimuth
+Alias choice(5)  = ch_sonic_height
+Alias choice(6)  = ch_site_declin
+Alias choice(7)  = ch_site_rufness
+Alias choice(8)  = ch_site_fetch_N
+Alias choice(9)  = ch_site_fetch_E
+Alias choice(10) = ch_site_fetch_S
+Alias choice(11) = ch_site_fetch_W
+
+Public settings(NUM_SETTINGS)
+Alias settings(1)  = dband_mult
+Alias settings(2)  = dband_min
+Alias settings(3)  = dband_def
+Alias settings(4)  = sonic_azimuth
+Alias settings(5)  = sonic_height
+Alias settings(6)  = site_declin
+Alias settings(7)  = site_rufness
+Alias settings(8)  = site_fetch_N
+Alias settings(9)  = site_fetch_E
+Alias settings(10) = site_fetch_S
+Alias settings(11) = site_fetch_W
+'HINT define units despite non-Public b/c many are saved to `info` table
+Units dband_mult = ratio
+Units dband_min = m/s
+Units dband_def = m/s
+Units sonic_azimuth = degEofN
+Units sonic_height = m
+Units site_rufness = m
+Units site_declin = degEofTN
+Units site_fetch_N = m
+Units site_fetch_E = m
+Units site_fetch_S = m
+Units site_fetch_W = m
 
 
 '============================ DATA TABLES ===================================
@@ -307,19 +374,79 @@ DataTable(gps_daily,TRUE,30)
   Sample(1,num_clock_change,UINT2)
 EndTable
 
+DataTable(info,True,50)
+  'CardOut() TODO
+  Sample(1,dband_mult,FP2)
+    FieldNames("deadband_mult")
+  Sample(1,dband_min,FP2)
+    FieldNames("deadband_min")
+  Sample(1,dband_def,FP2)
+    FieldNames("deadband_default")
+  Sample(1,sonic_azimuth,FP2)
+  Sample(1,sonic_height,FP2)
+  Sample(1,site_declin,FP2)
+    FieldNames("site_mag_declin")
+  Sample(1,site_rufness,FP2)
+    FieldNames("Site_roughness")
+  Sample(1,site_fetch_N,FP2)
+  Sample(1,site_fetch_E,FP2)
+  Sample(1,site_fetch_S,FP2)
+  Sample(1,site_fetch_W,FP2)
+  Sample(1,Status.CompileResults,String)
+    FieldNames("CompileResults")
+  Sample(1,Status.CardStatus,String)
+    FieldNames("CardStatus")
+  Sample(1,Status.RunSignature,UINT2)
+    FieldNames("RunSig")
+  Sample(1,Status.ProgSignature,UINT2)
+    FieldNames("ProgSig")
+  Sample(1,VERSION,String)
+    FieldNames("GitRepoTag")
+EndTable  
+
 
 '============================= CUSTOM MENUS =================================
 Const Yes = True
 Const Cancel = False
+Dim save_settings As Boolean
+Dim discard_settings As Boolean
+Dim reset_settings As Boolean
 Dim recompile As Boolean
 
 DisplayMenu("LT REA DAQ", -1)
   MenuItem("Sampling?", is_running)
     MenuPick(False, True)
+
+  SubMenu("Settings")
+    SubMenu("Deadband")
+      MenuItem("Multiplier", ch_dband_mult)
+      MenuItem("Minimum, m/s", ch_dband_min)
+      MenuItem("Default, m/s", ch_dband_def)
+    EndSubMenu
+    SubMenu("Site & sensors")
+      MenuItem("Sonic azimuth", ch_sonic_azimuth)
+      MenuItem("Sonic height", ch_sonic_height)
+      MenuItem("Mag. declin.", ch_site_declin)
+      MenuItem("Roughness length", ch_site_rufness)
+      MenuItem("Max fetch N", ch_site_fetch_N)
+      MenuItem("Max fetch E", ch_site_fetch_E)
+      MenuItem("Max fetch S", ch_site_fetch_S)
+      MenuItem("Max fetch W", ch_site_fetch_W)
+    EndSubMenu
+    SubMenu("Apply/cancel")
+      MenuItem("Save now?", save_settings)
+        MenuPick(Cancel, Yes)
+      MenuItem("Discard?", discard_settings)
+        MenuPick(Cancel, Yes)
+      MenuItem("Set default?", reset_settings)
+        MenuPick(Cancel, Yes)
+    EndSubMenu
+  EndSubMenu
+
   SubMenu("Initial setup")
     MenuItem("Time zone", UTC_OFFSET)
       MenuPick(UTC_OFFSET,-8,-7,-6,-5,-4) 'FIXME: not valid outside USA
-    MenuRecompile("Recompile?", recompile)
+    MenuRecompile("Apply now?", recompile)
       MenuPick(Cancel,Yes)
   EndSubMenu
 EndMenu
@@ -327,18 +454,93 @@ EndMenu
 
 '============================= SUBROUTINES ==================================
 Sub update_deadband() 'FIXME TODO
-  deadband = 0.1
+  If (deadband=NAN OR Uz_Std=NAN OR Uz_Std=0) Then
+    deadband = dband_def
+  Else
+    deadband = dband_mult * Uz_Std
+  EndIf
+  If (deadband < dband_min) Then deadband = dband_min
   neg_deadband = -1*deadband
 EndSub
 
-Sub reset_rotangles()
+Sub set_default_choices() '-------------------------------------------------
+  ch_dband_mult = DEF_DBAND_MULT
+  ch_dband_min = DEF_DBAND_MIN
+  ch_dband_def = DEF_DBAND_DEF
+  ch_sonic_azimuth = DEF_SONIC_AZIMUTH
+  ch_sonic_height = DEF_SONIC_HEIGHT
+  ch_site_declin = DEF_SITE_DECLIN
+  ch_site_rufness = DEF_SITE_RUFNESS
+  ch_site_fetch_N = DEF_SITE_FETCH_N
+  ch_site_fetch_E = DEF_SITE_FETCH_E
+  ch_site_fetch_S = DEF_SITE_FETCH_S
+  ch_site_fetch_W = DEF_SITE_FETCH_W
+EndSub
+
+Sub populate_choices()
+  Move(choice(1),NUM_SETTINGS,settings(1),NUM_SETTINGS)
+EndSub
+
+Sub save_current_choices()
+  'HINT treat azimuth differently since 0 is valid option
+  If (ch_sonic_azimuth < 0) Then
+    ch_sonic_azimuth = -1
+    azimuth = 0
+  Else
+    ch_sonic_azimuth = ch_sonic_azimuth MOD 360
+    azimuth = sonic_azimuth
+  EndIf
+
+  If (ch_sonic_height < 0) Then (ch_sonic_height = 0)
+  If (ch_site_declin < DECLIN_MIN) Then (ch_site_declin = DECLIN_MIN)
+  If (ch_site_declin > DECLIN_MAX) Then (ch_site_declin = DECLIN_MAX)
+  If (ch_site_fetch_N < 0) Then (ch_site_fetch_N = 0)
+  If (ch_site_fetch_E < 0) Then (ch_site_fetch_E = 0)
+  If (ch_site_fetch_S < 0) Then (ch_site_fetch_S = 0)
+  If (ch_site_fetch_W < 0) Then (ch_site_fetch_W = 0)
+  If (ch_site_rufness < 0) Then (ch_site_rufness = 0)
+
+  'HINT order matters when validating dband settings!
+  If (ch_dband_min < 0) Then (ch_dband_min = 0)
+  If (ch_dband_def < ch_dband_min) Then (ch_dband_def = ch_dband_min)
+  If (ch_dband_mult > DBMULT_MAX) Then (ch_dband_mult = DBMULT_MAX)
+  If (ch_dband_mult < 0 OR (ch_dband_mult = 0 AND ch_dband_min > 0)) Then
+    ch_dband_mult = DEF_DBAND_MULT
+  EndIf
+
+  Move(settings(1),NUM_SETTINGS,choice(1),NUM_SETTINGS)
+  Calfile(settings,NUM_SETTINGS,SETTINGS_FILE,WRITEFILE)
+
+  update_deadband()
+EndSub
+
+Sub load_settings()
+  filehandle = FileOpen(SETTINGS_FILE,"rb",0)
+  FileClose(filehandle)
+  If (filehandle=0) Then  'file not found
+    set_default_choices()
+  Else
+    Calfile(settings,NUM_SETTINGS,SETTINGS_FILE,READFILE)
+    populate_choices()
+  EndIf
+  save_current_choices()
+EndSub
+
+Sub setdefault_settings()
+  FileManage(SETTINGS_FILE,8) 'delete file
+  load_settings()
+EndSub
+
+Sub reset_rotangles() '-----------------------------------------------------
   Move(rot_angles(1),6,0,1)
   CT = 1.0
 EndSub
 
-Sub setup()
-  update_deadband()
+Sub setup() 
   reset_rotangles() 'TODO retain rotation angles across power cycles
+  deadband = NAN 'caught in update_deadband(), invoked within load_settings()
+  load_settings()
+  CallTable(info)
   
   SerialOpen(SONIC_COM,SONIC_BAUD,SONIC_FORMAT,0,SONIC_BUFF)
   PortSet(SW12_CAN_P,True)
@@ -411,7 +613,20 @@ BeginProg
       'DewPoint(hmp_Tdew_Avg, hmp_T_Avg, hmp_RH_Avg) 'TODO ????
     EndIf
     CallTable(stats)
-    
+
+    If (save_settings) Then
+      save_current_choices()
+      save_settings = Cancel
+      CallTable(info)
+    ElseIf (discard_settings) Then
+      populate_choices()
+      discard_settings = Cancel
+    ElseIf (reset_settings) Then
+      setdefault_settings()
+      reset_settings = Cancel
+      CallTable(info)
+    EndIf
+
     inbetween_slow_scan = True
     If (just_had_slow_scan) Then
       just_had_slow_scan = False
