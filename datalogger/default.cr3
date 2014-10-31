@@ -218,6 +218,8 @@ Units deadband = m/s
 Public vlv_up_ON As Boolean
 Public vlv_dn_ON As Boolean
 
+Public is_running As Boolean
+
 Dim just_had_slow_scan As Boolean
 Dim inbetween_slow_scan As Boolean
 
@@ -312,6 +314,8 @@ Const Cancel = False
 Dim recompile As Boolean
 
 DisplayMenu("LT REA DAQ", -1)
+  MenuItem("Sampling?", is_running)
+    MenuPick(False, True)
   SubMenu("Initial setup")
     MenuItem("Time zone", UTC_OFFSET)
       MenuPick(UTC_OFFSET,-8,-7,-6,-5,-4) 'FIXME: not valid outside USA
@@ -341,18 +345,13 @@ Sub setup()
   PortSet(SW12_PMP_P,True)
 EndSub
 
-Public onoff
-
 '============================== PROGRAM =====================================
 BeginProg
   setup()
   
   Scan(FAST_INTV,msec,FAST_BUFF,0)
     ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-    If TimeIntoInterval(0,1,Min) Then
-      onoff = NOT onoff
-      PortSet(CTRL_PUMPS,onoff)
-    EndIf
+    PortSet(CTRL_PUMPS,is_running)
     ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
     SerialInRecord(SONIC_COM,sonic_record,0,SONIC_RECLEN,&h0D,sonic_bytes,11)
@@ -362,7 +361,7 @@ BeginProg
     Uz_rot = sonic_Uz*CT - sonic_Uz*ST*CE - sonic_Uy*ST*SE
     vlv_up_ON = False
     vlv_dn_ON = False
-    If (False) Then 'TODO If (NOT is_running) Then
+    If (NOT is_running) Then
       'do nothing
     ElseIf (Uz_rot >= deadband) Then
       vlv_up_ON = True
