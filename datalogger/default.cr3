@@ -25,19 +25,19 @@ EndConstTable
 Const SONIC_COM = Com4 'C7/C8
 Const GPS_COM = Com3   'C5/C6
 
-Const HMP_T_DF = 13  'DF 13 H/L
-Const HMP_RH_DF = 14 'DF 14 H/L
+Const HMP_T_DF = 8
+Const HMP_RH_DF = 9
 
 Const CTRL_VLV_UP = 1 'C1
 Const CTRL_VLV_DN = 2 'C2
 'reserved              C3
 Const CTRL_PUMPS  = 4 'C4
 
-Const P_CAN_UP_SE = 11 'SE11/DF6H
-Const P_CAN_DN_SE = 13 'SE13/DF7H
-Const P_PMP_UP_SE = 1  'SE1/DF1H
-Const P_PMP_DN_SE = 3  'SE3/DF2H
-Const P_BARO_SE   = 15 'SE15/DF8H
+Const P_CAN_UP_SE = 25
+Const P_CAN_DN_SE = 26
+Const P_PMP_UP_SE = 27
+Const P_PMP_DN_SE = 28
+Const P_BARO_SE   = 1
 
 Const SW12_CAN_P = 9  'SW12-1
 Const SW12_PMP_P = 10 'SW12-2
