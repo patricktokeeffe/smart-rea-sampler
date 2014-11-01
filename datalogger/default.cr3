@@ -63,7 +63,7 @@ Const FAST_INTV = 100 'milliseconds, scan freq.
 Const FAST_BUFF = 10 
 Const SLOW_INTV = 1   'seconds, scan freq.
 Const SLOW_BUFF = 5
-Const STATS_INTV = 30 'minutes, stats output
+Const STATS_INTV = 5 'minutes, stats output
 Const STOPFULL = 1    'stop recording when tables are full
 
 Const SONIC_RECLEN = 34 'characters per record
