@@ -18,7 +18,12 @@ Const VERSION = ""
 '========================= DEFAULT SETTINGS =================================
 ConstTable
   Const UTC_OFFSET = -8 'Pacific Standard Time
-  
+
+  'not appropriate for PickList so not available in Initial Setup custom menu
+  Const MARGIN_MIN = 5 '%
+  Const MARGIN_MAX = 25 '%
+  Const PUMP_SF = 0.9 'ratio
+  Const PRESS_RUNAVG = 5 '# recs to include
   Const DECLIN_MIN = -35 'deg E of TN
   Const DECLIN_MAX = 35 'deg E of TN
   Const DBMULT_MAX = 2 'ratio
@@ -51,6 +56,7 @@ Const SW12_PMP_P = 10 'SW12-2
 Const MBAR_PER_PSI = 68.947573 'mbar/psia
 Const MBAR_PER_INHG = 33.864882 'mbar/inHg
 Const PI = 3.14159
+Const CRITICAL_RATIO = 0.528
 
 Const INTEG = 250     'analog integration time
 Const FAST_INTV = 100 'milliseconds, scan freq.
@@ -214,6 +220,14 @@ Alias rotated(3) = W_Avg
 Alias rotated(4) = W_Std
 Units rotated = m/s
 
+Public mean_press(5)
+Alias mean_press(1) = mean_can_UP
+Alias mean_press(2) = mean_can_DN
+Alias mean_press(3) = mean_pump_UP
+Alias mean_press(4) = mean_pump_DN
+Alias mean_press(5) = mean_baro
+
+
 '----------------------------- OPERATION -----------------------------------
 Public deadband
 Dim neg_deadband
@@ -226,6 +240,12 @@ Public vlv_up_ON As Boolean
 Public vlv_dn_ON As Boolean
 
 Public is_running As Boolean
+Public cans_full As Boolean
+Public pump_fault As Boolean
+
+Public can_fill_margin 'TODO: Dim
+Public max_can_press 'TODO: Dim
+Public max_pump_press 'TODO: Dim
 
 Dim just_had_slow_scan As Boolean
 Dim inbetween_slow_scan As Boolean
@@ -238,7 +258,7 @@ Const READFILE = 1
 
 '----- DEFAULT SETTINGS -----
 Const SETTINGS_FILE = "CPU:rea_settings.dat"
-Const NUM_SETTINGS = {11}
+Const NUM_SETTINGS = {12}
 
 Const DEF_DBAND_MULT = 0.85 '0 < X <= 1
 Const DEF_DBAND_MIN = 0.05 'm/s
@@ -251,6 +271,7 @@ Const DEF_SITE_FETCH_N = 0 'm, 0=disabled
 Const DEF_SITE_FETCH_E = 0 'm, 0=disabled
 Const DEF_SITE_FETCH_S = 0 'm, 0=disabled
 Const DEF_SITE_FETCH_W = 0 'm, 0=disabled
+Const DEF_FILL_MARGIN = 10 '%
 
 Dim choice(NUM_SETTINGS)
 Alias choice(1)  = ch_dband_mult
@@ -264,6 +285,7 @@ Alias choice(8)  = ch_site_fetch_N
 Alias choice(9)  = ch_site_fetch_E
 Alias choice(10) = ch_site_fetch_S
 Alias choice(11) = ch_site_fetch_W
+Alias choice(12) = ch_fill_margin
 
 Public settings(NUM_SETTINGS)
 Alias settings(1)  = dband_mult
@@ -277,6 +299,7 @@ Alias settings(8)  = site_fetch_N
 Alias settings(9)  = site_fetch_E
 Alias settings(10) = site_fetch_S
 Alias settings(11) = site_fetch_W
+Alias settings(12) = fill_margin
 'HINT define units despite non-Public b/c many are saved to `info` table
 Units dband_mult = ratio
 Units dband_min = m/s
@@ -289,6 +312,7 @@ Units site_fetch_N = m
 Units site_fetch_E = m
 Units site_fetch_S = m
 Units site_fetch_W = m
+Units fill_margin = %
 
 
 '============================ DATA TABLES ===================================
@@ -376,6 +400,8 @@ EndTable
 
 DataTable(info,True,50)
   'CardOut() TODO
+  Sample(1,fill_margin,FP2)
+    'TODO better name?
   Sample(1,dband_mult,FP2)
     FieldNames("deadband_mult")
   Sample(1,dband_min,FP2)
@@ -416,8 +442,14 @@ Dim recompile As Boolean
 DisplayMenu("LT REA DAQ", -1)
   MenuItem("Sampling?", is_running)
     MenuPick(False, True)
+  DisplayValue("Cans full?", cans_full)
+  DisplayValue("Pump fail?", pump_fault)
 
   SubMenu("Settings")
+    SubMenu("Sampling")
+      MenuItem("Fill margin, %", ch_fill_margin)
+        MenuPick(5, 10, 15, 20, 25)
+    EndSubMenu
     SubMenu("Deadband")
       MenuItem("Multiplier", ch_dband_mult)
       MenuItem("Minimum, m/s", ch_dband_min)
@@ -475,6 +507,7 @@ Sub set_default_choices() '-------------------------------------------------
   ch_site_fetch_E = DEF_SITE_FETCH_E
   ch_site_fetch_S = DEF_SITE_FETCH_S
   ch_site_fetch_W = DEF_SITE_FETCH_W
+  ch_fill_margin = DEF_FILL_MARGIN
 EndSub
 
 Sub populate_choices()
@@ -499,6 +532,9 @@ Sub save_current_choices()
   If (ch_site_fetch_S < 0) Then (ch_site_fetch_S = 0)
   If (ch_site_fetch_W < 0) Then (ch_site_fetch_W = 0)
   If (ch_site_rufness < 0) Then (ch_site_rufness = 0)
+  
+  If (ch_fill_margin < MARGIN_MIN) Then (ch_fill_margin = MARGIN_MIN)
+  If (ch_fill_margin > MARGIN_MAX) Then (ch_fill_margin = MARGIN_MAX)
 
   'HINT order matters when validating dband settings!
   If (ch_dband_min < 0) Then (ch_dband_min = 0)
@@ -512,6 +548,7 @@ Sub save_current_choices()
   Calfile(settings,NUM_SETTINGS,SETTINGS_FILE,WRITEFILE)
 
   update_deadband()
+  can_fill_margin = fill_margin/100.0 'scale % -> ratio
 EndSub
 
 Sub load_settings()
@@ -552,9 +589,25 @@ BeginProg
   setup()
   
   Scan(FAST_INTV,msec,FAST_BUFF,0)
-    ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    If (mean_baro=NAN) Then
+      'broken sensor?!
+    'TODO: check each sensor's run avg value to detect sensor fault?
+    Else
+      'TODO: compare to longer-term running mean of barometric pressure?
+      '      OR maybe compare to minimum barometric pressure in last 24 hrs?
+      max_can_press = mean_baro * (CRITICAL_RATIO - fill_margin/100)
+      max_pump_press = max_can_press * PUMP_SF
+      cans_full = mean_can_UP >= max_can_press OR mean_can_DN >= max_can_press
+      'TODO check can status when sampling is activated instead of all the time?
+      pump_fault = is_running AND (mean_pump_UP >= max_pump_press OR _
+                                   mean_pump_DN >= max_pump_press)
+      If (cans_full) Then is_running = False
+      'HINT: following has race condition whereby pump_fault is true, cannot
+      '      become false
+      'If (cans_full OR pump_fault) Then is_running = False
+    EndIf
+
     PortSet(CTRL_PUMPS,is_running)
-    ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
     SerialInRecord(SONIC_COM,sonic_record,0,SONIC_RECLEN,&h0D,sonic_bytes,11)
     SplitStr(sonic(1),sonic_record,0,5,0)
@@ -644,7 +697,14 @@ BeginProg
     VoltSe(press_can_DN,1,mv5000,P_CAN_DN_SE,True,0,INTEG, P_CAN_DN_MLT,P_CAN_DN_OFF)
     VoltSe(press_pump_UP,1,mv5000,P_PMP_UP_SE,True,0,INTEG, P_PMP_UP_MLT,P_PMP_UP_OFF)
     VoltSe(press_pump_DN,1,mv5000,P_PMP_DN_SE,True,0,INTEG, P_PMP_DN_MLT,P_PMP_DN_OFF)
-    VoltSe(press_baro,1,mv5000,P_BARO_SE,True,0,INTEG, P_BARO_MLT,P_BARO_OFF)
+    'VoltSe(press_baro,1,mv5000,P_BARO_SE,True,0,INTEG, P_BARO_MLT,P_BARO_OFF)
+    press_baro = 920 'mbar FIXME
+    
+    AvgRun(mean_can_UP,1,press_can_UP,PRESS_RUNAVG)
+    AvgRun(mean_can_DN,1,press_can_DN,PRESS_RUNAVG)
+    AvgRun(mean_pump_UP,1,press_pump_UP,PRESS_RUNAVG)
+    AvgRun(mean_pump_DN,1,press_pump_DN,PRESS_RUNAVG)
+    AvgRun(mean_baro,1,press_baro,PRESS_RUNAVG)
 
     CallTable(ts_slow)
     just_had_slow_scan = True
