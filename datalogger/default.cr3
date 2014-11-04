@@ -66,6 +66,11 @@ Const SLOW_BUFF = 5
 Const STATS_INTV = 5 'minutes, stats output
 Const STOPFULL = 1    'stop recording when tables are full
 
+Const RUN_TIMER = 1
+Const START = 0
+Const STOP = 1
+Const STOP_RESET = 3
+
 Const SONIC_RECLEN = 34 'characters per record
 Const SONIC_BAUD = 38400
 Const SONIC_FORMAT = 3 '8/N/1 @ RS-232 voltages without PakBus pass-thru
@@ -157,8 +162,10 @@ Units num_clock_change = occurrences
 
 '-------------------------- PROCESSING -------------------------------------
 Public cov_sonic(1,4) '= [ [Ts, Ux, Uy, Uz] ]
+Public cov_sonic2(1,2) '= [ [Ts, Uz_rot] ]
+Public cov_rea(1,3) '= [ [Ts, Uz, Uz_rot] ]
 
-Public work_out(20)
+Public work_out(28)
 Alias work_out(1)  = Ux_Avg '4x Average()
 Alias work_out(2)  = Uy_Avg
 Alias work_out(3)  = Uz_Avg
@@ -173,30 +180,59 @@ Alias work_out(11) = cov_Ux_Uz
 Alias work_out(12) = Uy_Std
 Alias work_out(13) = cov_Uy_Uz
 Alias work_out(14) = Uz_Std
-Alias work_out(15) = sonic_WS_sclr_Avg 'WindVector, 4 vals
-Alias work_out(16) = sonic_WS_rslt_Avg
-Alias work_out(17) = sonic_WD_rslt_Avg
-Alias work_out(18) = sonic_WD_csi_Std
-Alias work_out(19) = hmp_T_Avg '2x Average()
-Alias work_out(20) = hmp_e_Avg
+'Alias work_out(15) = Ts_Std (duplicate) 'Covariance(), 3 vals
+Alias work_out(16) = cov_Ts_Uz_rot
+Alias work_out(17) = Uz_rot_Std
+Alias work_out(18) = sonic_WS_sclr_Avg 'WindVector, 4 vals
+Alias work_out(19) = sonic_WS_rslt_Avg
+Alias work_out(20) = sonic_WD_rslt_Avg
+Alias work_out(21) = sonic_WD_csi_Std
+Alias work_out(22) = hmp_T_Avg '4x Average()
+Alias work_out(23) = hmp_e_Avg
+Alias work_out(24) = rea_Ts_up_Avg
+Alias work_out(25) = rea_Ts_dn_Avg
+Alias work_out(26) = vlv_up_ON_Tot '3x Totalize()
+Alias work_out(27) = vlv_dn_ON_Tot
+Alias work_out(28) = vlv_possible
 Units Ux_Avg = m/s
 Units Uy_Avg = m/s
 Units Uz_Avg = m/s
 Units Ts_Avg = degC
 Units Ts_Std = degC
 Units Uz_Std = m/s
+Units Uz_rot_Std = m/s
 Units sonic_WS_sclr_Avg = m/s
 Units sonic_WS_rslt_Avg = m/s
 Units sonic_WD_rslt_Avg = degEofTN
 Units sonic_WD_csi_Std = degrees
 Units hmp_T_Avg = degC
 Units hmp_e_Avg = kPa
+Units rea_Ts_up_Avg = degC
+Units rea_Ts_dn_Avg = degC
+Units vlv_up_ON_Tot = scans
+Units vlv_dn_ON_Tot = scans
+Units vlv_possible = scans
 
-Public derived(2)
-Alias derived(1) = hmp_e_sat_Avg
-Alias derived(2) = hmp_RH_Avg
-Units hmp_e_sat_Avg = kPa
-Units hmp_RH_Avg = %
+Public rea_out(11)
+Alias rea_out(1)  = Ts_Std2 'Covariance(), 6 vals
+Alias rea_out(2)  = cov_Ts_Uz2
+Alias rea_out(3)  = cov_Ts_Uz_rot2
+Alias rea_out(4)  = Uz_Std2
+Alias rea_out(5)  = cov_Uz_Uz_rot2
+Alias rea_out(6)  = Uz_rot_Std2
+Alias rea_out(7)  = rea_Ts_up_Avg2 '2x Average()
+Alias rea_out(8)  = rea_Ts_dn_Avg2
+Alias rea_out(9)  = vlv_up_ON_Tot2 '3x Totalize()
+Alias rea_out(10) = vlv_dn_ON_Tot2
+Alias rea_out(11) = vlv_possible2
+Units Ts_Std2 = degC
+Units Uz_Std2 = m/s
+Units Uz_rot_Std2 = m/s
+Units rea_Ts_up_Avg2 = degC
+Units rea_Ts_dn_Avg2 = degC
+Units vlv_up_ON_Tot2 = scans
+Units vlv_dn_ON_Tot2 = scans
+Units vlv_possible2 = scans
 
 Public Uz_rot 'real-time coordinate-rotated
 Units Uz_rot = m/s
@@ -220,6 +256,12 @@ Alias rotated(3) = W_Avg
 Alias rotated(4) = W_Std
 Units rotated = m/s
 
+Public derived(2)
+Alias derived(1) = hmp_e_sat_Avg
+Alias derived(2) = hmp_RH_Avg
+Units hmp_e_sat_Avg = kPa
+Units hmp_RH_Avg = %
+
 Public mean_press(5)
 Alias mean_press(1) = mean_can_UP
 Alias mean_press(2) = mean_can_DN
@@ -227,6 +269,22 @@ Alias mean_press(3) = mean_pump_UP
 Alias mean_press(4) = mean_pump_DN
 Alias mean_press(5) = mean_baro
 
+Public rea_sim(3)
+Alias rea_sim(1) = rea_Ts_up
+Alias rea_sim(2) = rea_Ts_dn
+Alias rea_sim(3) = delta_Ts
+Units rea_sim = degC
+
+Public beta(3)
+Alias beta(1) = beta_Ts_Uz
+Alias beta(2) = beta_Ts_Uz_rot
+Alias beta(3) = beta_Ts_W
+Units beta = dimless
+
+Public vlv_fraction(2)
+Alias vlv_fraction(1) = vlv_up_fraction
+Alias vlv_fraction(2) = vlv_dn_fraction
+Units vlv_fraction = ratio
 
 '----------------------------- OPERATION -----------------------------------
 Public deadband
@@ -236,17 +294,24 @@ Units deadband = m/s
 Public azimuth
 Units azimuth = degEofTN
 
-Public vlv_up_ON As Boolean
-Public vlv_dn_ON As Boolean
+Public vlv_ON(2) As Boolean
+Alias vlv_ON(1) = vlv_up_ON
+Alias vlv_ON(2) = vlv_dn_ON
+
+Public elapsed_time As Long
+Units elapsed_time = min
 
 Public is_running As Boolean
 Public cans_full As Boolean
 Public pump_fault As Boolean
 
-Public can_fill_margin 'TODO: Dim
-Public max_can_press 'TODO: Dim
-Public max_pump_press 'TODO: Dim
+Dim can_fill_margin
+Public max_can_press
+Public max_pump_press
 
+Dim run_queued As Boolean
+Dim run_aborted As Boolean
+Dim rea_finished As Boolean 'OpenInterval trigger var
 Dim just_had_slow_scan As Boolean
 Dim inbetween_slow_scan As Boolean
 
@@ -316,8 +381,36 @@ Units fill_margin = %
 
 
 '============================ DATA TABLES ===================================
-DataTable(ts_fast,True,1000) 'FIXME - # records
-  DataInterval(0,FAST_INTV,msec,10)
+DataTable(work,True,2)
+  DataInterval(0,STATS_INTV,Min,1)
+  Average(1,sonic_Ux,IEEE4,disable_sonic)
+  Average(1,sonic_Uy,IEEE4,disable_sonic)
+  Average(1,sonic_Uz,IEEE4,disable_sonic)
+  Average(1,sonic_Ts,IEEE4,disable_sonic)
+  Covariance(4,cov_sonic(1,1),IEEE4,disable_sonic,10)
+  Covariance(2,cov_sonic2(1,1),IEEE4,disable_sonic,3)
+  WindVector(1,-1*sonic_Uy,sonic_Ux,IEEE4,disable_sonic,0,1,2)
+  Average(1,hmp_T,IEEE4,(inbetween_slow_scan OR hmp_T=NAN))
+  Average(1,hmp_e,IEEE4,(inbetween_slow_scan OR hmp_e=NAN))
+  Average(1,rea_Ts_up,IEEE4,rea_Ts_up=NAN)
+  Average(1,rea_Ts_dn,IEEE4,rea_Ts_dn=NAN)
+  Totalize(1,1,UINT4,NOT vlv_up_ON OR vlv_up_ON=NAN)
+  Totalize(1,1,UINT4,NOT vlv_dn_ON OR vlv_dn_ON=NAN)
+  Totalize(1,1,UINT4,False)
+EndTable
+
+DataTable(work_rea,rea_finished,10)
+  OpenInterval
+  Covariance(3,cov_rea(1,1),IEEE4,disable_sonic,6)
+  Average(1,rea_Ts_up,IEEE4,rea_Ts_up=NAN)
+  Average(1,rea_Ts_dn,IEEE4,rea_Ts_dn=NAN)
+  Totalize(1,1,UINT4,NOT vlv_up_ON OR vlv_up_ON=NAN)
+  Totalize(1,1,UINT4,NOT vlv_dn_ON OR vlv_dn_ON=NAN)
+  Totalize(1,1,UINT4,False)
+EndTable
+
+DataTable(ts_fast,True,1000) '----------------- FINAL OUTPUTS ---------------
+  DataInterval(0,FAST_INTV,msec,10) 'FIXME - previous line, # records
   CardOut(STOPFULL,10*60*60*4) '4 hours, FIXME
   
   Sample(1,sonic_Ux,IEEE4) 'TODO - FP2? only reported to two decimal places
@@ -338,18 +431,6 @@ DataTable(ts_slow,True,1000) 'FIXME - # records
   Sample(1,press_pump_UP,IEEE4)
   Sample(1,press_pump_DN,IEEE4)
   Sample(1,press_baro,IEEE4)
-EndTable
-
-DataTable(work,True,2)
-  DataInterval(0,STATS_INTV,Min,1)
-  Average(1,sonic_Ux,IEEE4,disable_sonic)
-  Average(1,sonic_Uy,IEEE4,disable_sonic)
-  Average(1,sonic_Uz,IEEE4,disable_sonic)
-  Average(1,sonic_Ts,IEEE4,disable_sonic)
-  Covariance(4,cov_sonic(1,1),IEEE4,disable_sonic,10)
-  WindVector(1,-1*sonic_Uy,sonic_Ux,IEEE4,disable_sonic,0,1,2)
-  Average(1,hmp_T,IEEE4,(inbetween_slow_scan OR hmp_T=NAN))
-  Average(1,hmp_e,IEEE4,(inbetween_slow_scan OR hmp_e=NAN))
 EndTable
 
 DataTable(stats,True,1000) 'FIXME - # records
@@ -373,11 +454,34 @@ DataTable(stats,True,1000) 'FIXME - # records
   Average(1,press_pump_UP,IEEE4,(inbetween_slow_scan OR press_pump_UP=NAN))
   Average(1,press_pump_DN,IEEE4,(inbetween_slow_scan OR press_pump_DN=NAN))
   Average(1,press_baro,IEEE4,(inbetween_slow_scan OR press_baro=NAN))
-  
-  Sample(1,Uz_Std,IEEE4)
-  Sample(1,W_Std,IEEE4)
+
+  Sample(1,deadband,IEEE4)  
   Sample(1,eta,IEEE4)
-  Sample(1,theta,IEEE4)
+  Sample(1,theta,IEEE4)  
+  Sample(1,Uz_Std,IEEE4)
+  Sample(1,Uz_rot_Std,IEEE4)
+  Sample(1,W_Std,IEEE4)
+  Sample(1,beta_Ts_Uz,IEEE4)
+  Sample(1,beta_Ts_Uz_rot,IEEE4)
+  Sample(1,beta_Ts_W,IEEE4)
+  Sample(1,vlv_up_fraction,IEEE4)
+  Sample(1,vlv_dn_fraction,IEEE4)
+EndTable
+
+DataTable(rea,True,10)
+  OpenInterval
+  CardOut(1,100)
+  Sample(1,Uz_Std,IEEE4)
+  Sample(1,Uz_rot_Std,IEEE4)
+  Sample(1,W_Std,IEEE4)
+  Sample(1,beta_Ts_Uz,IEEE4)
+  Sample(1,beta_Ts_Uz_rot,IEEE4)
+  Sample(1,beta_Ts_W,IEEE4)
+  Sample(1,vlv_up_fraction,IEEE4)
+  Sample(1,vlv_dn_fraction,IEEE4)
+  Sample(1,elapsed_time,IEEE4)
+    FieldNames("run_duration")
+  'TODO starting pressures? ending pressures?
 EndTable
 
 DataTable(gps_daily,TRUE,30)
@@ -440,10 +544,18 @@ Dim reset_settings As Boolean
 Dim recompile As Boolean
 
 DisplayMenu("LT REA DAQ", -1)
-  MenuItem("Sampling?", is_running)
-    MenuPick(False, True)
-  DisplayValue("Cans full?", cans_full)
-  DisplayValue("Pump fail?", pump_fault)
+  SubMenu("Status")
+    DisplayValue("Sampling?", is_running)
+    DisplayValue("Cans full?", cans_full)
+    DisplayValue("Pump fail?", pump_fault)
+  EndSubMenu
+
+  SubMenu("Run control")
+    MenuItem("Queue run", run_queued)
+      MenuPick(Cancel, Yes)
+    MenuItem("Abort run", run_aborted)
+      MenuPick(Cancel, Yes)
+  EndSubMenu
 
   SubMenu("Settings")
     SubMenu("Sampling")
@@ -568,6 +680,28 @@ Sub setdefault_settings()
   load_settings()
 EndSub
 
+Sub end_run() '-------------------------------------------------------------
+  is_running = False
+  run_aborted = Cancel
+  elapsed_time = Timer(RUN_TIMER,min,STOP)
+
+  rea_finished = True
+  CallTable(work_rea)
+  If (work_rea.Output(1,1)) Then
+    GetRecord(rea_out(1),work_rea,1)
+    delta_Ts = rea_Ts_up_Avg2 - rea_Ts_dn_Avg2
+    beta_Ts_Uz = cov_Ts_Uz2 / (Uz_Std2 * delta_Ts)
+    beta_Ts_Uz_rot = cov_Ts_Uz_rot2 / (Uz_rot_Std2 * delta_Ts)
+    beta_Ts_W = cov_Ts_Uz_rot / (W_Std * delta_Ts)
+    vlv_up_fraction = vlv_up_ON_Tot2 / vlv_possible2
+    vlv_dn_fraction = vlv_dn_ON_Tot2 / vlv_possible2
+    CallTable(rea)
+  EndIf
+  
+  rea_finished = False
+  Timer(RUN_TIMER,min,STOP_RESET)
+EndSub
+
 Sub reset_rotangles() '-----------------------------------------------------
   Move(rot_angles(1),6,0,1)
   CT = 1.0
@@ -590,23 +724,40 @@ BeginProg
   
   Scan(FAST_INTV,msec,FAST_BUFF,0)
     If (mean_baro=NAN) Then
-      'broken sensor?!
-    'TODO: check each sensor's run avg value to detect sensor fault?
-    Else
-      'TODO: compare to longer-term running mean of barometric pressure?
-      '      OR maybe compare to minimum barometric pressure in last 24 hrs?
-      max_can_press = mean_baro * (CRITICAL_RATIO - fill_margin/100)
-      max_pump_press = max_can_press * PUMP_SF
-      cans_full = mean_can_UP >= max_can_press OR mean_can_DN >= max_can_press
-      'TODO check can status when sampling is activated instead of all the time?
-      pump_fault = is_running AND (mean_pump_UP >= max_pump_press OR _
-                                   mean_pump_DN >= max_pump_press)
-      If (cans_full) Then is_running = False
-      'HINT: following has race condition whereby pump_fault is true, cannot
-      '      become false
-      'If (cans_full OR pump_fault) Then is_running = False
+      'TODO: check each sensor's run avg value to detect sensor fault?
+    ElseIf (run_aborted) Then
+      end_run()
+    ElseIf (is_running) Then
+      run_queued = Cancel 'prevent queuing run while one is in-progress
+'    ElseIf (run_queued) Then
+'      If (NOT run_already_queued) Then
+'        update_start_time()
+'        run_already_queued = True
+'      EndIf
+'    Else
+'      run_already_queued = False
     EndIf
 
+    'TODO: compare to longer-term running mean of barometric pressure?
+    '      OR maybe compare to minimum barometric pressure in last 24 hrs?
+    max_can_press = mean_baro * (CRITICAL_RATIO - can_fill_margin)
+    max_pump_press = max_can_press * PUMP_SF
+    cans_full = mean_can_UP >= max_can_press OR mean_can_DN >= max_can_press
+    pump_fault = is_running AND (mean_pump_UP >= max_pump_press OR _
+                                 mean_pump_DN >= max_pump_press)
+    'FIXME: pump_fault has race condition where cannot be true until >5 sec 
+    '       after start of run, therefore can't be used as flag proper
+
+    If (cans_full) Then 'TODO FIXME: OR pump_fault) Then
+      'do not begin run
+    ElseIf (run_queued) Then 'TODO qualify with start time
+      is_running = True
+      run_queued = Cancel
+      elapsed_time = Timer(RUN_TIMER,min,START)
+'    ElseIf (is_running) Then
+'      elapsed_time = Timer(RUN_TIMER,min,QUERY)
+'      If (elapsed_time >= run_dur) Then end_run()
+    EndIf
     PortSet(CTRL_PUMPS,is_running)
 
     SerialInRecord(SONIC_COM,sonic_record,0,SONIC_RECLEN,&h0D,sonic_bytes,11)
@@ -614,8 +765,7 @@ BeginProg
     disable_sonic = (sonic_diag > 0 OR sonic_diag=NAN OR sonic_Ts=NAN OR _
                                 sonic_Ux=NAN OR sonic_Uy=NAN or sonic_Uz=NAN)
     Uz_rot = sonic_Uz*CT - sonic_Uz*ST*CE - sonic_Uy*ST*SE
-    vlv_up_ON = False
-    vlv_dn_ON = False
+    Move(vlv_ON(1),2,False,1)
     If (NOT is_running) Then
       'do nothing
     ElseIf (Uz_rot >= deadband) Then
@@ -625,6 +775,14 @@ BeginProg
     EndIf
     PortSet(CTRL_VLV_UP,vlv_up_ON) 'HINT use PortSet (measurment task) not
     PortSet(CTRL_VLV_DN,vlv_dn_ON) 'WriteIO (processing task = delayed)
+
+    'HINT separate from valve on/off so REA sim can occur when not sampling
+    Move(rea_sim(1),2,NAN,1)
+    If (Uz_rot >= deadband) Then
+      rea_Ts_up = sonic_Ts
+    ElseIf (Uz_rot <= neg_deadband) Then
+      rea_Ts_dn = sonic_Ts
+    EndIf
 
     CallTable(ts_fast)
     CallTable(work)
@@ -649,9 +807,10 @@ BeginProg
       'HINT in following line *_Std values are still covariances
       W_Std = SQR(Uz_Std*CT*CT + Ux_Std*ST*ST*CE*CE + Uy_Std*ST*ST*SE*SE - 2*cov_Uy_Uz*CT*ST*SE + 2*cov_Ux_Uy*CE*ST*ST*SE)
       'now convert cov -> std
-      Uz_Std = SQR(Uz_Std)
       Ts_Std = SQR(Ts_Std)
-      
+      Uz_Std = SQR(Uz_Std)
+      Uz_rot_Std = SQR(Uz_rot_Std)
+
       update_deadband()
 
       If (sonic_WS_sclr_Avg = NAN AND sonic_WS_rslt_Avg = NAN) Then
@@ -664,8 +823,18 @@ BeginProg
       SatVP(hmp_e_sat_Avg, hmp_T_Avg)
       hmp_RH_Avg = 100*hmp_e_Avg/hmp_e_sat_Avg
       'DewPoint(hmp_Tdew_Avg, hmp_T_Avg, hmp_RH_Avg) 'TODO ????
-    EndIf
+
+      delta_Ts = rea_Ts_up_Avg - rea_Ts_dn_Avg
+      beta_Ts_Uz = cov_Ts_Uz / (Uz_Std * delta_Ts)
+      beta_Ts_Uz_rot = cov_Ts_Uz_rot / (Uz_rot_Std * delta_Ts)
+      beta_Ts_W = cov_Ts_Uz_rot / (W_Std * delta_Ts)
+      
+      vlv_up_fraction = vlv_up_ON_Tot/vlv_possible
+      vlv_dn_fraction = vlv_dn_ON_Tot/vlv_possible
+    EndIf 'new record output
     CallTable(stats)
+    
+    If (is_running) Then CallTable(work_rea)
 
     If (save_settings) Then
       save_current_choices()
