@@ -162,7 +162,7 @@ Units num_clock_change = occurrences
 
 '-------------------------- PROCESSING -------------------------------------
 Public cov_sonic(1,4) '= [ [Ts, Ux, Uy, Uz] ]
-Public cov_sonic2(1,2) '= [ [Ts, Uz_rot] ]
+Public cov_rotate(1,2) '= [ [Ts, Uz_rot] ]
 Public cov_rea(1,3) '= [ [Ts, Uz, Uz_rot] ]
 
 Public work_out(28)
@@ -388,7 +388,7 @@ DataTable(work,True,2)
   Average(1,sonic_Uz,IEEE4,disable_sonic)
   Average(1,sonic_Ts,IEEE4,disable_sonic)
   Covariance(4,cov_sonic(1,1),IEEE4,disable_sonic,10)
-  Covariance(2,cov_sonic2(1,1),IEEE4,disable_sonic,3)
+  Covariance(2,cov_rotate(1,1),IEEE4,disable_sonic,3)
   WindVector(1,-1*sonic_Uy,sonic_Ux,IEEE4,disable_sonic,0,1,2)
   Average(1,hmp_T,IEEE4,(inbetween_slow_scan OR hmp_T=NAN))
   Average(1,hmp_e,IEEE4,(inbetween_slow_scan OR hmp_e=NAN))
@@ -783,6 +783,11 @@ BeginProg
     ElseIf (Uz_rot <= neg_deadband) Then
       rea_Ts_dn = sonic_Ts
     EndIf
+
+    cov_sonic(1,1) = sonic_Ts   'load covariance arrays
+    Move(cov_sonic(1,2),3,sonic_Ux,3)
+    cov_rotate(1,1) = sonic_Ts
+    cov_rotate(1,2) = Uz_rot
 
     CallTable(ts_fast)
     CallTable(work)
