@@ -12,6 +12,28 @@ The suggested `config.txt` was sourced from Adafruit, the vendor.
     https://web.archive.org/web/20140930223220/https://www.adafruit.com/products/1928
 
 
+Initial setup
+-------------
+
+* Default local is Great Britain, which does funny things to keyboard layout so
+  change to US locale
+* Enable I2C support for real-time clock comms
+
+* Run `$ sudo raspi-config` 
+    * Under (4) Internationalisation
+        * change local from 'en_GB UTF8' to 'en_US UTF8'
+        * change timezone to 'US > Pacific-New'
+        * change keyboard layout from 'English (UK)' to 'Other > English (US) > English (US)'
+            * leave AltGr as default for layout
+            * no compose key
+            * yes, enable Ctrl+Alt+Bckspc to exit X server
+    * Under (8) Advanced Options
+        * A6 I2C: change from 'no' to 'yes'
+        * ???? possibly disable serial output during boot? <-- depends on
+          whether UART0 is used to communicate with TriMetric or other UART is
+          appropriated
+
+
 Display mounting
 ----------------
 
