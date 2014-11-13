@@ -17,4 +17,5 @@ http://documents.opto22.com/1288_Standard_Wiring_Diagrams_IntheBox.pdf    Opto22
 http://www.opto22.com/documents/0450_Std_Dig_DC_Outputs_data_sheet.pdf    Opto22_relay_DC_output_datasheet.pdf
 http://parker.com/literature/Literature%20Files/Precision%20Fluidics%20Division/UpdatedFiles/Series%209%20Data%20Sheet.pdf    Parker_Series_9_valve_datasheet.pdf
 http://www.youngusa.com/Manuals/81000VRE-90(G).pdf    RM_Young_Anemometer_81000VRE.pdf
+https://bitbucket.org/wsular/sampler-rea-lt-canister/downloads/Uniweld_Hummvac_HVP12_Instruction_Sheet.pdf    Uniweld_Hummvac_HVP12_Instruction_Sheet.pdf
 http://www.ecy.wa.gov/climatechange/maps/solar/solar_state.pdf    WA_ECY_solar_potential_map.pdf
