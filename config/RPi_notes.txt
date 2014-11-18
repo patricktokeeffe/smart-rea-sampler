@@ -12,12 +12,32 @@ The suggested `config.txt` was sourced from Adafruit, the vendor.
     https://web.archive.org/web/20140930223220/https://www.adafruit.com/products/1928
 
 
+Real-time clock (RTC) construction
+----------------------------------
+
+* Omit the resistors so the module communicates at 3.3V instead of 5V
+* Fortuitously all signals are adjacent in the ribbon cable:
+    * Pin 3: SDA1
+    * Pin 4: 5V
+    * Pin 5: SCL1
+    * Pin 6: Ground
+* Cut cable and split apart so pins 1 & 2 constitute one 'cable' (will be used
+  for comms w/ Tri-meter), pins 3-6 are connected as another 'cable' and
+  remainder of ribbon cable is left alone for now
+* To faciliate easy connect/disconnect, use 4-pc PCB-mount screw terminal block
+* Mount on one end of small rectangular IC-style RadioShack PCB; other end will
+  be used to mount components for communicating with Trimetric
+
+
 Initial setup
 -------------
 
+For initial setup, connection to internet is required to pull updates and
+packages. At WSU, need wifi dongle since wired LAN implements MAC filtering.
+
 * Default local is Great Britain, which does funny things to keyboard layout so
   change to US locale
-* Enable I2C support for real-time clock comms
+* Enable I2C support for real-time clock comms (two-part process)
 
 * Run `$ sudo raspi-config` 
     * Under (4) Internationalisation
@@ -32,6 +52,8 @@ Initial setup
         * ???? possibly disable serial output during boot? <-- depends on
           whether UART0 is used to communicate with TriMetric or other UART is
           appropriated
+* Follow Adafruit GPIO setup instructions to finish enabling I2C support
+* Follow Adafruit Adding a RTC tutorial to finish integrating RTC w/ RPi
 
 
 Display mounting
