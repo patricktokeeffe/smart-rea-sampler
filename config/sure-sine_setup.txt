@@ -1,0 +1,8 @@
+Notes regarding Sure-Sine inverter setup
+----------------------------------------
+
+* Communication software is freely available from MorningStar; use new download
+  script added to `/third-party/` folder
+* Jumper settings, change before applying power:
+    * Switch #1 ON to enable 'standby' power mode 
+    * Switch #4 ON to change comms from MeterBus(TM) to MODBUS
