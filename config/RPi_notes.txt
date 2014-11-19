@@ -49,11 +49,18 @@ packages. At WSU, need wifi dongle since wired LAN implements MAC filtering.
             * yes, enable Ctrl+Alt+Bckspc to exit X server
     * Under (8) Advanced Options
         * A6 I2C: change from 'no' to 'yes'
-        * ???? possibly disable serial output during boot? <-- depends on
-          whether UART0 is used to communicate with TriMetric or other UART is
-          appropriated
+        * A7 Serial: change output message to serial port during boot from 'yes' to 'no'
 * Follow Adafruit GPIO setup instructions to finish enabling I2C support
 * Follow Adafruit Adding a RTC tutorial to finish integrating RTC w/ RPi
+
+
+Communicating with TriMetric
+----------------------------
+
+* Ignore mnfctr's instructions, just use pins 3/4 on trimetric
+    * Tie Trimetric and RPi ground together
+* DO run signal output through 5->3.3 level converter
+* No need to connect transmit from Pi (Trimetric has no Rx)
 
 
 Display mounting
