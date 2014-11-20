@@ -92,8 +92,11 @@ Concerning the HDMI display buttons:
 RS-232 interfacing
 ------------------
 
-* USB-RS232 converter (Adafruit product 18, discontinued) operates at +/-10Vdc
+* ~~USB-RS232 converter (Adafruit product 18, discontinued) operates at +/-10Vdc
   which makes it ideal for use with True RS-232 on Inverter's serial dongle
   but NOT okay for communicating via built-in UARTs -- get serial debug cable
-  (Adafruit product 954) instead
+  (Adafruit product 954) instead~~ Per MorningStar Connectivity Manual, the
+  voltage output of serial ports on MorningStar products is below the RS-232 
+  electrical specification so no need to use a special USB-serial adapter with
+  SureSine's serial adapter
 
