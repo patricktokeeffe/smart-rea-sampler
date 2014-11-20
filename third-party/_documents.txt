@@ -35,6 +35,7 @@ http://support.morningstarcorp.com/wp-content/uploads/2014/07/SI300.APP_.Derate_
 http://support.morningstarcorp.com/wp-content/uploads/2014/07/SI.APP_.LVD-Adjustment.01.EN_.pdf    MorningStar_SureSine_LVD_adjustment.pdf
 http://www.morningstarcorp.com/wp-content/uploads/2014/01/MS-ZMAN-SI-EN-A_ETL.pdf    MorningStar_SureSine_Manual.pdf
 http://support.morningstarcorp.com/wp-content/uploads/2014/07/MS-ZMAN-RM04-A.pdf    MorningStar_SureSine_meter_map.pdf
+http://support.morningstarcorp.com/wp-content/uploads/2014/07/SI300.APP_.Modbus.EN_.03.pdf    MorningStar_SureSine_Modbus.pdf
 http://www.morningstarcorp.com/wp-content/uploads/2014/02/SureSineENG_R2_1_08.pdf    MorningStar_SureSine_specs.pdf
 http://support.morningstarcorp.com/wp-content/uploads/2014/07/ALL.DIG_.Parallel_Batt_String_Wiring.01.EN_.pdf    MorningStar_tech_note_battery_wiring.pdf
 http://support.morningstarcorp.com/wp-content/uploads/2014/07/ALL.DIG_.Correct_Inverter_Wiring.01.EN_.pdf    MorningStar_tech_note_inverter_wiring.pdf

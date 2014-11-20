@@ -54,6 +54,12 @@ packages. At WSU, need wifi dongle since wired LAN implements MAC filtering.
 * Follow Adafruit Adding a RTC tutorial to finish integrating RTC w/ RPi
 
 
+General environment setup
+-------------------------
+
+* Get `pip`: run `$ sudo apt-get install python-pip`
+
+
 Communicating with TriMetric
 ----------------------------
 
@@ -61,6 +67,16 @@ Communicating with TriMetric
     * Tie Trimetric and RPi ground together
 * DO run signal output through 5->3.3 level converter
 * No need to connect transmit from Pi (Trimetric has no Rx)
+
+
+Communicating with SureSine
+---------------------------
+
+* Device uses MODBUS RTU protocol (after switching jumper #4 ON)
+* To get Python support for MODBUS run `$sudo pip install -U minimalmodbus`
+* `minimalmodbus` uses default baudrate of 115200, must be changed to 9600
+* Logical addresses are one greater than real addresses (0x0000=1, 0x0001=2, ...)
+  and must be entered as decimal (0x000A=10, 0x000B=11, ...)
 
 
 Improve usability by enabling VNC server
