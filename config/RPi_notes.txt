@@ -63,6 +63,20 @@ Communicating with TriMetric
 * No need to connect transmit from Pi (Trimetric has no Rx)
 
 
+Improve usability by enabling VNC server
+----------------------------------------
+
+* Follow Adafruit lesson installing/setting up `tightvncserver`; the display
+  number specified at launch (":1" argument) causes incoming connections to
+  be accepted on port 5900+# (e.g. :1 -> 5901)
+* Must configure wired ethernet port (eth0) to use static IP (192.168.174.252)
+  so cross-over cable connection is straight-forward
+    * <http://www.stuffaboutcode.com/2012/05/raspberry-pi-setting-static-ip-address.html>
+    * <http://elinux.org/RPi_Setting_up_a_static_IP_in_Debian>
+    * Only include address & netmask under static settings
+    * DO need to reboot RPi for settings to take effect
+
+
 Display mounting
 ----------------
 

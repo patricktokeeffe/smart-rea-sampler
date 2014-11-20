@@ -1,5 +1,6 @@
 https://learn.adafruit.com/downloads/pdf/adding-a-real-time-clock-to-raspberry-pi.pdf    Adafruit_Adding_a_RTC_to_RPi.pdf
 https://learn.adafruit.com/downloads/pdf/ds1307-real-time-clock-breakout-board-kit.pdf    Adafruit_DS1307_RTC_Breakout_Board_Kit.pdf
+https://learn.adafruit.com/downloads/pdf/adafruit-raspberry-pi-lesson-7-remote-control-with-vnc.pdf    Adafruit_Remote_Control_with_VNC.pdf
 https://learn.adafruit.com/downloads/pdf/adafruits-raspberry-pi-lesson-4-gpio-setup.pdf    Adafruit_RPi_GPIO_Setup.pdf
 http://bogartengineering.com/sites/default/files/docs/SHUNTInfo2.pdf    BogartEngr_Information_on_shunts.pdf
 http://bogartengineering.com/sites/default/files/docs/TM-2025Install%20Instructions9-12.pdf    BogartEngr_TriMetric_2025_installer_instructions.pdf
