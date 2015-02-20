@@ -23,10 +23,11 @@ ConstTable
   Const MARGIN_MIN = 5 '%
   Const MARGIN_MAX = 25 '%
   Const PUMP_SF = 0.9 'ratio
-  Const PRESS_RUNAVG = 5 '# recs to include
   Const DECLIN_MIN = -35 'deg E of TN
   Const DECLIN_MAX = 35 'deg E of TN
   Const DBMULT_MAX = 2 'ratio
+  Const PRESS_RUNAVG = 5 'seconds (# slow intv.)
+  Const WDFILT_TIME = 5 'min
 EndConstTable
 
 
@@ -56,6 +57,7 @@ Const SW12_PMP_P = 10 'SW12-2
 Const MBAR_PER_PSI = 68.947573 'mbar/psia
 Const MBAR_PER_INHG = 33.864882 'mbar/inHg
 Const PI = 3.14159
+Const DperR = 180/PI
 Const CRITICAL_RATIO = 0.528
 
 Const INTEG = 250     'analog integration time
@@ -65,6 +67,7 @@ Const SLOW_INTV = 1   'seconds, scan freq.
 Const SLOW_BUFF = 5
 Const STATS_INTV = 5 'minutes, stats output
 Const STOPFULL = 1    'stop recording when tables are full
+Const WDFILT_RUNAVG = (1000/FAST_INTV)*60*WDFILT_TIME
 
 Const RUN_TIMER = 1
 Const START = 0
@@ -165,7 +168,7 @@ Public cov_sonic(1,4) '= [ [Ts, Ux, Uy, Uz] ]
 Public cov_rotate(1,2) '= [ [Ts, Uz_rot] ]
 Public cov_rea(1,3) '= [ [Ts, Uz, Uz_rot] ]
 
-Public work_out(28)
+Public work_out(31)
 Alias work_out(1)  = Ux_Avg '4x Average()
 Alias work_out(2)  = Uy_Avg
 Alias work_out(3)  = Uz_Avg
@@ -194,6 +197,9 @@ Alias work_out(25) = rea_Ts_dn_Avg
 Alias work_out(26) = vlv_up_ON_Tot '3x Totalize()
 Alias work_out(27) = vlv_dn_ON_Tot
 Alias work_out(28) = vlv_possible
+Alias work_out(29) = unfilt_vlv_up_ON_Tot
+Alias work_out(30) = unfilt_vlv_dn_ON_Tot
+Alias work_out(31) = unfilt_vlv_possible
 Units Ux_Avg = m/s
 Units Uy_Avg = m/s
 Units Uz_Avg = m/s
@@ -212,8 +218,11 @@ Units rea_Ts_dn_Avg = degC
 Units vlv_up_ON_Tot = scans
 Units vlv_dn_ON_Tot = scans
 Units vlv_possible = scans
+Units unfilt_vlv_up_ON_Tot = scans
+Units unfilt_vlv_dn_ON_Tot = scans
+Units unfilt_vlv_possible = scans
 
-Public rea_out(11)
+Public rea_out(14)
 Alias rea_out(1)  = Ts_Std2 'Covariance(), 6 vals
 Alias rea_out(2)  = cov_Ts_Uz2
 Alias rea_out(3)  = cov_Ts_Uz_rot2
@@ -225,6 +234,9 @@ Alias rea_out(8)  = rea_Ts_dn_Avg2
 Alias rea_out(9)  = vlv_up_ON_Tot2 '3x Totalize()
 Alias rea_out(10) = vlv_dn_ON_Tot2
 Alias rea_out(11) = vlv_possible2
+Alias rea_out(12) = unfilt_vlv_up_ON_Tot2 '3x Totalize()
+Alias rea_out(13) = unfilt_vlv_dn_ON_Tot2
+Alias rea_out(14) = unfilt_vlv_possible2
 Units Ts_Std2 = degC
 Units Uz_Std2 = m/s
 Units Uz_rot_Std2 = m/s
@@ -233,6 +245,9 @@ Units rea_Ts_dn_Avg2 = degC
 Units vlv_up_ON_Tot2 = scans
 Units vlv_dn_ON_Tot2 = scans
 Units vlv_possible2 = scans
+Units unfilt_vlv_up_ON_Tot2 = scans
+Units unfilt_vlv_dn_ON_Tot2 = scans
+Units unfilt_vlv_possible2 = scans
 
 Public Uz_rot 'real-time coordinate-rotated
 Units Uz_rot = m/s
@@ -262,13 +277,6 @@ Alias derived(2) = hmp_RH_Avg
 Units hmp_e_sat_Avg = kPa
 Units hmp_RH_Avg = %
 
-Public mean_press(5)
-Alias mean_press(1) = mean_can_UP
-Alias mean_press(2) = mean_can_DN
-Alias mean_press(3) = mean_pump_UP
-Alias mean_press(4) = mean_pump_DN
-Alias mean_press(5) = mean_baro
-
 Public rea_sim(3)
 Alias rea_sim(1) = rea_Ts_up
 Alias rea_sim(2) = rea_Ts_dn
@@ -281,10 +289,28 @@ Alias beta(2) = beta_Ts_Uz_rot
 Alias beta(3) = beta_Ts_W
 Units beta = dimless
 
-Public vlv_fraction(2)
+Public vlv_fraction(4)
 Alias vlv_fraction(1) = vlv_up_fraction
 Alias vlv_fraction(2) = vlv_dn_fraction
+Alias vlv_fraction(3) = unfilt_vlv_up_fraction
+Alias vlv_fraction(4) = unfilt_vlv_dn_fraction
 Units vlv_fraction = ratio
+
+Public run_means(12)
+Alias run_means(1)  = mean_can_UP
+Alias run_means(2)  = mean_can_DN
+Alias run_means(3)  = mean_pump_UP
+Alias run_means(4)  = mean_pump_DN
+Alias run_means(5)  = mean_baro
+Alias run_means(6)  = mean_Ux
+Alias run_means(7)  = mean_Uy
+Alias run_means(8)  = mean_WD
+Alias run_means(9)  = 
+Units run_means = mbar
+Units mean_Ux = m/s
+Units mean_Uy = m/s
+Units mean_WD = degEofTN
+
 
 '----------------------------- OPERATION -----------------------------------
 Public deadband
@@ -294,6 +320,7 @@ Units deadband = m/s
 Public azimuth
 Units azimuth = degEofTN
 
+Public vlv_status
 Public vlv_ON(2) As Boolean
 Alias vlv_ON(1) = vlv_up_ON
 Alias vlv_ON(2) = vlv_dn_ON
@@ -309,6 +336,10 @@ Dim can_fill_margin
 Public max_can_press
 Public max_pump_press
 
+Public wait_flag As Boolean
+Public poor_condition_flags(1) As Boolean
+Alias poor_condition_flags(1) = poor_WD
+
 Dim run_queued As Boolean
 Dim run_aborted As Boolean
 Dim rea_finished As Boolean 'OpenInterval trigger var
@@ -323,7 +354,7 @@ Const READFILE = 1
 
 '----- DEFAULT SETTINGS -----
 Const SETTINGS_FILE = "CPU:rea_settings.dat"
-Const NUM_SETTINGS = {12}
+Const NUM_SETTINGS = {14}
 
 Const DEF_DBAND_MULT = 0.85 '0 < X <= 1
 Const DEF_DBAND_MIN = 0.05 'm/s
@@ -337,6 +368,8 @@ Const DEF_SITE_FETCH_E = 0 'm, 0=disabled
 Const DEF_SITE_FETCH_S = 0 'm, 0=disabled
 Const DEF_SITE_FETCH_W = 0 'm, 0=disabled
 Const DEF_FILL_MARGIN = 10 '%
+Const DEF_WDFILT_MIN = 0 'deg E of TN
+Const DEF_WDFILT_MAX = 359 'deg E of TN 
 
 Dim choice(NUM_SETTINGS)
 Alias choice(1)  = ch_dband_mult
@@ -351,6 +384,8 @@ Alias choice(9)  = ch_site_fetch_E
 Alias choice(10) = ch_site_fetch_S
 Alias choice(11) = ch_site_fetch_W
 Alias choice(12) = ch_fill_margin
+Alias choice(13) = ch_wdfilt_min
+Alias choice(14) = ch_wdfilt_max
 
 Public settings(NUM_SETTINGS)
 Alias settings(1)  = dband_mult
@@ -365,6 +400,8 @@ Alias settings(9)  = site_fetch_E
 Alias settings(10) = site_fetch_S
 Alias settings(11) = site_fetch_W
 Alias settings(12) = fill_margin
+Alias settings(13) = wdfilt_min
+Alias settings(14) = wdfilt_max
 'HINT define units despite non-Public b/c many are saved to `info` table
 Units dband_mult = ratio
 Units dband_min = m/s
@@ -378,6 +415,8 @@ Units site_fetch_E = m
 Units site_fetch_S = m
 Units site_fetch_W = m
 Units fill_margin = %
+Units wdfilt_min = degEofTN
+Units wdfilt_max = defEofTN
 
 
 '============================ DATA TABLES ===================================
@@ -394,6 +433,9 @@ DataTable(work,True,2)
   Average(1,hmp_e,IEEE4,(inbetween_slow_scan OR hmp_e=NAN))
   Average(1,rea_Ts_up,IEEE4,rea_Ts_up=NAN)
   Average(1,rea_Ts_dn,IEEE4,rea_Ts_dn=NAN)
+  Totalize(1,1,UINT4,NOT vlv_up_ON OR vlv_up_ON=NAN OR wait_flag)
+  Totalize(1,1,UINT4,NOT vlv_dn_ON OR vlv_dn_ON=NAN OR wait_flag)
+  Totalize(1,1,UINT4,wait_flag)
   Totalize(1,1,UINT4,NOT vlv_up_ON OR vlv_up_ON=NAN)
   Totalize(1,1,UINT4,NOT vlv_dn_ON OR vlv_dn_ON=NAN)
   Totalize(1,1,UINT4,False)
@@ -404,6 +446,9 @@ DataTable(work_rea,rea_finished,10)
   Covariance(3,cov_rea(1,1),IEEE4,disable_sonic,6)
   Average(1,rea_Ts_up,IEEE4,rea_Ts_up=NAN)
   Average(1,rea_Ts_dn,IEEE4,rea_Ts_dn=NAN)
+  Totalize(1,1,UINT4,NOT vlv_up_ON OR vlv_up_ON=NAN OR wait_flag)
+  Totalize(1,1,UINT4,NOT vlv_dn_ON OR vlv_dn_ON=NAN OR wait_flag)
+  Totalize(1,1,UINT4,wait_flag)
   Totalize(1,1,UINT4,NOT vlv_up_ON OR vlv_up_ON=NAN)
   Totalize(1,1,UINT4,NOT vlv_dn_ON OR vlv_dn_ON=NAN)
   Totalize(1,1,UINT4,False)
@@ -418,6 +463,7 @@ DataTable(ts_fast,True,1000) '----------------- FINAL OUTPUTS ---------------
   Sample(1,sonic_Uz,IEEE4)
   Sample(1,sonic_Ts,IEEE4)
   Sample(1,sonic_diag,IEEE4)
+  Sample(1,vlv_status,IEEE4)
 EndTable
 
 DataTable(ts_slow,True,1000) 'FIXME - # records
@@ -466,6 +512,8 @@ DataTable(stats,True,1000) 'FIXME - # records
   Sample(1,beta_Ts_W,IEEE4)
   Sample(1,vlv_up_fraction,IEEE4)
   Sample(1,vlv_dn_fraction,IEEE4)
+  Sample(1,unfilt_vlv_up_fraction,IEEE4)
+  Sample(1,unfilt_vlv_dn_fraction,IEEE4)
 EndTable
 
 DataTable(rea,True,10)
@@ -479,6 +527,8 @@ DataTable(rea,True,10)
   Sample(1,beta_Ts_W,IEEE4)
   Sample(1,vlv_up_fraction,IEEE4)
   Sample(1,vlv_dn_fraction,IEEE4)
+  Sample(1,unfilt_vlv_up_fraction,IEEE4)
+  Sample(1,unfilt_vlv_dn_fraction,IEEE4)
   Sample(1,elapsed_time,IEEE4)
     FieldNames("run_duration")
   'TODO starting pressures? ending pressures?
@@ -518,6 +568,10 @@ DataTable(info,True,50)
     FieldNames("site_mag_declin")
   Sample(1,site_rufness,FP2)
     FieldNames("Site_roughness")
+  Sample(1,wdfilt_min,FP2)
+    FieldNames("ok_wd_min")
+  Sample(1,wdfilt_max,FP2)
+    FieldNames("ok_wd_max")
   Sample(1,site_fetch_N,FP2)
   Sample(1,site_fetch_E,FP2)
   Sample(1,site_fetch_S,FP2)
@@ -546,6 +600,7 @@ Dim recompile As Boolean
 DisplayMenu("LT REA DAQ", -1)
   SubMenu("Status")
     DisplayValue("Sampling?", is_running)
+    DisplayValue("Wait flag?", wait_flag)
     DisplayValue("Cans full?", cans_full)
     DisplayValue("Pump fail?", pump_fault)
   EndSubMenu
@@ -561,6 +616,8 @@ DisplayMenu("LT REA DAQ", -1)
     SubMenu("Sampling")
       MenuItem("Fill margin, %", ch_fill_margin)
         MenuPick(5, 10, 15, 20, 25)
+      MenuItem("Minimum WD", ch_wdfilt_min)
+      MenuItem("Maximum WD", ch_wdfilt_max)
     EndSubMenu
     SubMenu("Deadband")
       MenuItem("Multiplier", ch_dband_mult)
@@ -620,6 +677,8 @@ Sub set_default_choices() '-------------------------------------------------
   ch_site_fetch_S = DEF_SITE_FETCH_S
   ch_site_fetch_W = DEF_SITE_FETCH_W
   ch_fill_margin = DEF_FILL_MARGIN
+  ch_wdfilt_min = DEF_WDFILT_MIN
+  ch_wdfilt_max = DEF_WDFILT_MAX
 EndSub
 
 Sub populate_choices()
@@ -644,7 +703,11 @@ Sub save_current_choices()
   If (ch_site_fetch_S < 0) Then (ch_site_fetch_S = 0)
   If (ch_site_fetch_W < 0) Then (ch_site_fetch_W = 0)
   If (ch_site_rufness < 0) Then (ch_site_rufness = 0)
-  
+
+  If (ch_wdfilt_min < 0) Then (ch_wdfilt_min = 0)
+  If (ch_wdfilt_max > 359) Then (ch_wdfilt_max = 359)
+  If (ch_wdfilt_max < ch_wdfilt_min) Then (ch_wdfilt_max = ch_wdfilt_min)
+
   If (ch_fill_margin < MARGIN_MIN) Then (ch_fill_margin = MARGIN_MIN)
   If (ch_fill_margin > MARGIN_MAX) Then (ch_fill_margin = MARGIN_MAX)
 
@@ -695,6 +758,8 @@ Sub end_run() '-------------------------------------------------------------
     beta_Ts_W = cov_Ts_Uz_rot / (W_Std * delta_Ts)
     vlv_up_fraction = vlv_up_ON_Tot2 / vlv_possible2
     vlv_dn_fraction = vlv_dn_ON_Tot2 / vlv_possible2
+    unfilt_vlv_up_fraction = unfilt_vlv_up_ON_Tot2 / unfilt_vlv_possible2
+    unfilt_vlv_dn_fraction = unfilt_vlv_dn_ON_Tot2 / unfilt_vlv_possible2
     CallTable(rea)
   EndIf
   
@@ -764,16 +829,26 @@ BeginProg
     SplitStr(sonic(1),sonic_record,0,5,0)
     disable_sonic = (sonic_diag > 0 OR sonic_diag=NAN OR sonic_Ts=NAN OR _
                                 sonic_Ux=NAN OR sonic_Uy=NAN or sonic_Uz=NAN)
+
+    AvgRun(mean_Ux,1,sonic_Ux,WDFILT_RUNAVG)
+    AvgRun(mean_Uy,1,sonic_Uy,WDFILT_RUNAVG)
     Uz_rot = sonic_Uz*CT - sonic_Uz*ST*CE - sonic_Uy*ST*SE
-    Move(vlv_ON(1),2,False,1)
-    If (NOT is_running) Then
-      'do nothing
+
+    If (NOT is_running OR wait_flag) Then
+      vlv_up_ON = False
+      vlv_dn_ON = False
+      vlv_status = 0
+      If poor_WD Then vlv_status += &b100 'WD flag
     ElseIf (Uz_rot >= deadband) Then
       vlv_up_ON = True
+      vlv_dn_ON = False
+      vlv_status = &b01
     ElseIf (Uz_rot <= neg_deadband) Then
+      vlv_up_ON = False
       vlv_dn_ON = True
+      vlv_status = &b10
     EndIf
-    PortSet(CTRL_VLV_UP,vlv_up_ON) 'HINT use PortSet (measurment task) not
+    PortSet(CTRL_VLV_UP,vlv_up_ON) 'HINT use PortSet (measurement task) not
     PortSet(CTRL_VLV_DN,vlv_dn_ON) 'WriteIO (processing task = delayed)
 
     'HINT separate from valve on/off so REA sim can occur when not sampling
@@ -836,6 +911,8 @@ BeginProg
       
       vlv_up_fraction = vlv_up_ON_Tot/vlv_possible
       vlv_dn_fraction = vlv_dn_ON_Tot/vlv_possible
+      unfilt_vlv_up_fraction = unfilt_vlv_up_ON_Tot/unfilt_vlv_possible
+      unfilt_vlv_dn_fraction = unfilt_vlv_dn_ON_Tot/unfilt_vlv_possible
     EndIf 'new record output
     CallTable(stats)
     
@@ -878,6 +955,11 @@ BeginProg
     AvgRun(mean_pump_UP,1,press_pump_UP,PRESS_RUNAVG)
     AvgRun(mean_pump_DN,1,press_pump_DN,PRESS_RUNAVG)
     AvgRun(mean_baro,1,press_baro,PRESS_RUNAVG)
+
+    mean_WD = (ATN2(-1*mean_Ux,-1*mean_Uy)*DperR + _
+                              SONIC_VAZ + sonic_azimuth + site_declin) MOD 360
+    poor_WD = mean_WD < wdfilt_min OR mean_WD > wdfilt_max
+    wait_flag = poor_WD
 
     CallTable(ts_slow)
     just_had_slow_scan = True
