@@ -719,6 +719,15 @@ Sub save_current_choices()
     ch_dband_mult = DEF_DBAND_MULT
   EndIf
 
+  ch_sonic_azimuth = INT(ch_sonic_azimuth)
+  ch_site_declin = INT(ch_site_declin)
+  ch_site_fetch_N = INT(ch_site_fetch_N)
+  ch_site_fetch_E = INT(ch_site_fetch_E)
+  ch_site_fetch_S = INT(ch_site_fetch_S)
+  ch_site_fetch_W = INT(ch_site_fetch_W)
+  ch_wdfilt_min = INT(ch_wdfilt_min)
+  ch_wdfilt_max = INT(ch_wdfilt_max)
+  ch_fill_margin = INT(ch_fill_margin)
   Move(settings(1),NUM_SETTINGS,choice(1),NUM_SETTINGS)
   Calfile(settings,NUM_SETTINGS,SETTINGS_FILE,WRITEFILE)
 
