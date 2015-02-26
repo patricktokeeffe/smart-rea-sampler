@@ -567,7 +567,7 @@ DataTable(info,True,50)
   Sample(1,site_declin,FP2)
     FieldNames("site_mag_declin")
   Sample(1,site_rufness,FP2)
-    FieldNames("Site_roughness")
+    FieldNames("site_roughness")
   Sample(1,wdfilt_min,FP2)
     FieldNames("ok_wd_min")
   Sample(1,wdfilt_max,FP2)
@@ -837,8 +837,7 @@ BeginProg
     SerialInRecord(SONIC_COM,sonic_record,0,SONIC_RECLEN,&h0D,sonic_bytes,11)
     SplitStr(sonic(1),sonic_record,0,5,0)
     disable_sonic = (sonic_diag > 0 OR sonic_diag=NAN OR sonic_Ts=NAN OR _
-                                sonic_Ux=NAN OR sonic_Uy=NAN or sonic_Uz=NAN)
-
+                                sonic_Ux=NAN OR sonic_Uy=NAN OR sonic_Uz=NAN)
     AvgRun(mean_Ux,1,sonic_Ux,WDFILT_RUNAVG)
     AvgRun(mean_Uy,1,sonic_Uy,WDFILT_RUNAVG)
     Uz_rot = sonic_Uz*CT - sonic_Uz*ST*CE - sonic_Uy*ST*SE
