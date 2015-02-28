@@ -602,6 +602,9 @@ DisplayMenu("LT REA DAQ", -1)
   SubMenu("Status")
     DisplayValue("Sampling?", is_running)
     DisplayValue("Wait flag?", wait_flag)
+    SubMenu("Flag details")
+      DisplayValue("Poor WD", poor_WD)
+    EndSubMenu
     DisplayValue("Cans full?", cans_full)
     DisplayValue("Pump fail?", pump_fault)
   EndSubMenu
