@@ -305,12 +305,12 @@ Alias run_means(5)  = mean_baro
 Alias run_means(6)  = mean_Ux
 Alias run_means(7)  = mean_Uy
 Alias run_means(8)  = mean_WD
-Alias run_means(9)  = 
+Alias run_means(9)  = mean_WS
 Units run_means = mbar
 Units mean_Ux = m/s
 Units mean_Uy = m/s
 Units mean_WD = degEofTN
-
+Units mean_WS = m/
 
 '----------------------------- OPERATION -----------------------------------
 Public deadband
@@ -964,6 +964,7 @@ BeginProg
     AvgRun(mean_pump_DN,1,press_pump_DN,PRESS_RUNAVG)
     AvgRun(mean_baro,1,press_baro,PRESS_RUNAVG)
 
+    mean_WS = SQR(mean_Ux*mean_Ux + mean_Uy*mean_Uy)
     mean_WD = INT(ATN2(-1*mean_Ux,-1*mean_Uy)*DperR + _
                        SONIC_VAZ + sonic_azimuth + site_declin + 360) MOD 360
     poor_WD = mean_WD < wdfilt_min OR mean_WD > wdfilt_max
