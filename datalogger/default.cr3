@@ -964,8 +964,8 @@ BeginProg
     AvgRun(mean_pump_DN,1,press_pump_DN,PRESS_RUNAVG)
     AvgRun(mean_baro,1,press_baro,PRESS_RUNAVG)
 
-    mean_WD = (ATN2(-1*mean_Ux,-1*mean_Uy)*DperR + _
-                              SONIC_VAZ + sonic_azimuth + site_declin) MOD 360
+    mean_WD = INT(ATN2(-1*mean_Ux,-1*mean_Uy)*DperR + _
+                       SONIC_VAZ + sonic_azimuth + site_declin + 360) MOD 360
     poor_WD = mean_WD < wdfilt_min OR mean_WD > wdfilt_max
     wait_flag = poor_WD
 
