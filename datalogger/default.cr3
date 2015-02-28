@@ -18,6 +18,7 @@ Const VERSION = ""
 '========================= DEFAULT SETTINGS =================================
 ConstTable
   Const UTC_OFFSET = -8 'Pacific Standard Time
+  Const DAYS_OF_DATA = 2 'to keep test data files sane sizes
 
   'not appropriate for PickList so not available in Initial Setup custom menu
   Const MARGIN_MIN = 5 '%
@@ -456,7 +457,7 @@ EndTable
 
 DataTable(ts_fast,True,1000) '----------------- FINAL OUTPUTS ---------------
   DataInterval(0,FAST_INTV,msec,10) 'FIXME - previous line, # records
-  CardOut(STOPFULL,10*60*60*4) '4 hours, FIXME
+  CardOut(STOPFULL,DAYS_OF_DATA*864000/FAST_INTV)
   
   Sample(1,sonic_Ux,IEEE4) 'TODO - FP2? only reported to two decimal places
   Sample(1,sonic_Uy,IEEE4)
@@ -468,7 +469,7 @@ EndTable
 
 DataTable(ts_slow,True,1000) 'FIXME - # records
   DataInterval(0,SLOW_INTV,sec,10)
-  CardOut(STOPFULL,1000) 'FIXME - # records
+  CardOut(STOPFULL,DAYS_OF_DATA*86400/SLOW_INTV)
   
   Sample(1,hmp_T,IEEE4)
   Sample(1,hmp_RH,IEEE4)
@@ -481,7 +482,7 @@ EndTable
 
 DataTable(stats,True,1000) 'FIXME - # records
   DataInterval(0,STATS_INTV,Min,10)
-  CardOut(STOPFULL,1000) 'FIXME - # records
+  CardOut(STOPFULL,DAYS_OF_DATA*1440/STATS_INTV)
 
   Average(1,sonic_Ts,FP2,disable_sonic or sonic_Ts=NAN)
   StdDev (1,sonic_Ts,FP2,disable_sonic)
@@ -536,7 +537,7 @@ EndTable
 
 DataTable(gps_daily,TRUE,30)
   DataInterval (0,1,Day,10)
-  CardOut(STOPFULL,150)
+  CardOut(STOPFULL,DAYS_OF_DATA)
   Median(1,(lat_deg + lat_min/60),GPS_MED_NUM,IEEE4,(lat_deg=NAN OR lat_min=NAN))
     FieldNames("latitude_Med")
     Units latitude_Med = degN
