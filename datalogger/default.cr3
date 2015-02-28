@@ -554,7 +554,7 @@ DataTable(gps_daily,TRUE,30)
 EndTable
 
 DataTable(info,True,50)
-  'CardOut() TODO
+  CardOut(STOPFULL,100)
   Sample(1,fill_margin,FP2)
     'TODO better name?
   Sample(1,dband_mult,FP2)
