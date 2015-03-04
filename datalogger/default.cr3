@@ -297,11 +297,13 @@ Alias beta(2) = beta_Ts_Uz_rot
 Alias beta(3) = beta_Ts_W
 Units beta = dimless
 
-Public turb(2) 'assorted turbulence/flux-related vars
+Public turb(3) 'assorted turbulence/flux-related vars
 Alias turb(1) = u_star    'friction velocity
 Alias turb(2) = L_        'Obukhov length
+Alias turb(3) = itt       'integral turbulence test
 Units u_star = m/s
 Units L_ = m
+Units itt = %
 
 Public vlv_fraction(5)
 Alias vlv_fraction(1) = vlv_up_fraction
@@ -532,6 +534,7 @@ DataTable(stats,True,1000) 'FIXME - # records
 
   Sample(1,u_star,IEEE4)
   Sample(1,L_,IEEE4)
+  Sample(1,itt,IEEE4)
   Sample(1,deadband,IEEE4)  
   Sample(1,eta,IEEE4)
   Sample(1,theta,IEEE4)
@@ -696,6 +699,25 @@ DisplayMenu("LT REA DAQ", -1)
       MenuPick(Cancel,Yes)
   EndSubMenu
 EndMenu
+
+
+'============================== FUNCTIONS ===================================
+
+'integral turbulence test following eq 1:
+'    Albin Hammerle, Alois Halswanter, Michael Schmitt, Micael Bahn, Ulrike
+'    Tappeiner, Alexander Cernusca, Georg Wohlfahrt. Boundary-Layer Meteorology.
+'    02/2007; 122(2):397-416. DOI: 10.1007/s10546-006-9109-x
+'
+'[sigma_W] = m/s, [u_star] = m/s, [L] = m
+Function TurbulenceTest(sigma_W, u_star_, L) As Float '% difference
+  Dim zeta, itt_model, itt_meas
+  If (sonic_height <= 0) Then Return NAN
+  zeta = sonic_height/L_
+  If (zeta < -2 OR zeta >= 1) Then Return (-1)
+  itt_model = 1.25 * IIF(zeta < 0, (1+3*ABS(zeta))^0.333, 1+0.2*zeta)
+  itt_meas = sigma_W/u_star_
+  Return Round(100*ABS(itt_meas-itt_model)/itt_model, 0)
+EndFunction
 
 
 '============================= SUBROUTINES ==================================
@@ -952,6 +974,7 @@ BeginProg
       EndIf
       u_star = SQR(SQR(cov_Ux_Uz*cov_Ux_Uz + cov_Uy_Uz*cov_Uy_Uz))
       L_ = -u_star^3 * (hmp_T_Avg+273.15)/(K_*G_*cov_Ts_Uz)
+      itt = TurbulenceTest(Uz_Std, u_star, L_)
       
       SatVP(hmp_e_sat_Avg, hmp_T_Avg)
       hmp_RH_Avg = 100*hmp_e_Avg/hmp_e_sat_Avg
