@@ -29,6 +29,7 @@ ConstTable
   Const DBMULT_MAX = 2 'ratio
   Const PRESS_RUNAVG = 5 'seconds (# slow intv.)
   Const WDFILT_TIME = 5 'min
+  Const FILT_INTV = 15 'seconds
 EndConstTable
 
 
@@ -969,14 +970,17 @@ BeginProg
     'FIXME: pump_fault has race condition where cannot be true until >5 sec 
     '       after start of run, therefore can't be used as flag proper
 
+    CallTable(ts_slow)
+    just_had_slow_scan = True
+  NextScan
+
+  SlowSequence
+  Scan(FILT_INTV,sec,1,0)
     mean_WS = SQR(mean_Ux*mean_Ux + mean_Uy*mean_Uy)
     mean_WD = INT(ATN2(-1*mean_Ux,-1*mean_Uy)*DperR + _
                        SONIC_VAZ + sonic_azimuth + site_declin + 360) MOD 360
     poor_WD = mean_WD < wdfilt_min OR mean_WD > wdfilt_max
     wait_flag = poor_WD
-
-    CallTable(ts_slow)
-    just_had_slow_scan = True
   NextScan
 
   SlowSequence
