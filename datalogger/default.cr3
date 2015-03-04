@@ -20,6 +20,7 @@ ConstTable
   Const UTC_OFFSET = -8 'Pacific Standard Time
   Const DAYS_OF_DATA = 2 'to keep test data files sane sizes
   Const WDFILT_TIME = 5 'min
+  Const RHFILT_TIME = 5 'min
   Const FILT_INTV = 15 'seconds
 
   'not appropriate for PickList so not available in Initial Setup custom menu
@@ -29,6 +30,7 @@ ConstTable
   Const DECLIN_MIN = -35 'deg E of TN
   Const DECLIN_MAX = 35 'deg E of TN
   Const DBMULT_MAX = 2 'ratio
+  Const RHFILT_MIN = 70 '%
   Const PRESS_RUNAVG = 5 'seconds (# slow intv.)
 EndConstTable
 
@@ -70,6 +72,7 @@ Const SLOW_BUFF = 5
 Const STATS_INTV = 5 'minutes, stats output
 Const STOPFULL = 1    'stop recording when tables are full
 Const WDFILT_RUNAVG = (1000/FAST_INTV)*60*WDFILT_TIME
+Const RHFILT_RUNAVG = (60/SLOW_INTV)*RHFILT_TIME
 
 Const RUN_TIMER = 1
 Const START = 0
@@ -308,11 +311,13 @@ Alias run_means(6)  = mean_Ux
 Alias run_means(7)  = mean_Uy
 Alias run_means(8)  = mean_WD
 Alias run_means(9)  = mean_WS
+Alias run_means(10) = mean_RH
 Units run_means = mbar
 Units mean_Ux = m/s
 Units mean_Uy = m/s
 Units mean_WD = degEofTN
 Units mean_WS = m/
+Units mean_RH = %
 
 '----------------------------- OPERATION -----------------------------------
 Public deadband
@@ -339,8 +344,9 @@ Public max_can_press
 Public max_pump_press
 
 Public wait_flag As Boolean
-Public poor_condition_flags(1) As Boolean
+Public poor_condition_flags(2) As Boolean
 Alias poor_condition_flags(1) = poor_WD
+Alias poor_condition_flags(2) = poor_RH
 
 Dim run_queued As Boolean
 Dim run_aborted As Boolean
@@ -356,7 +362,7 @@ Const READFILE = 1
 
 '----- DEFAULT SETTINGS -----
 Const SETTINGS_FILE = "CPU:rea_settings.dat"
-Const NUM_SETTINGS = {14}
+Const NUM_SETTINGS = {15}
 
 Const DEF_DBAND_MULT = 0.85 '0 < X <= 1
 Const DEF_DBAND_MIN = 0.05 'm/s
@@ -372,6 +378,7 @@ Const DEF_SITE_FETCH_W = 0 'm, 0=disabled
 Const DEF_FILL_MARGIN = 10 '%
 Const DEF_WDFILT_MIN = 0 'deg E of TN
 Const DEF_WDFILT_MAX = 359 'deg E of TN 
+Const DEF_RHFILT_MAX = 90 '%
 
 Dim choice(NUM_SETTINGS)
 Alias choice(1)  = ch_dband_mult
@@ -388,6 +395,7 @@ Alias choice(11) = ch_site_fetch_W
 Alias choice(12) = ch_fill_margin
 Alias choice(13) = ch_wdfilt_min
 Alias choice(14) = ch_wdfilt_max
+Alias choice(15) = ch_rhfilt_max
 
 Public settings(NUM_SETTINGS)
 Alias settings(1)  = dband_mult
@@ -404,6 +412,7 @@ Alias settings(11) = site_fetch_W
 Alias settings(12) = fill_margin
 Alias settings(13) = wdfilt_min
 Alias settings(14) = wdfilt_max
+Alias settings(15) = rhfilt_max
 'HINT define units despite non-Public b/c many are saved to `info` table
 Units dband_mult = ratio
 Units dband_min = m/s
@@ -419,6 +428,7 @@ Units site_fetch_W = m
 Units fill_margin = %
 Units wdfilt_min = degEofTN
 Units wdfilt_max = defEofTN
+Units rhfilt_max = %
 
 
 '============================ DATA TABLES ===================================
@@ -574,6 +584,8 @@ DataTable(info,True,50)
     FieldNames("ok_wd_min")
   Sample(1,wdfilt_max,FP2)
     FieldNames("ok_wd_max")
+  Sample(1,rhfilt_max,FP2)
+    FieldNames("ok_rh_max")
   Sample(1,site_fetch_N,FP2)
   Sample(1,site_fetch_E,FP2)
   Sample(1,site_fetch_S,FP2)
@@ -605,6 +617,7 @@ DisplayMenu("LT REA DAQ", -1)
     DisplayValue("Wait flag?", wait_flag)
     SubMenu("Flag details")
       DisplayValue("Poor WD", poor_WD)
+      DisplayValue("Poor RH", poor_RH)
     EndSubMenu
     DisplayValue("Cans full?", cans_full)
     DisplayValue("Pump fail?", pump_fault)
@@ -623,6 +636,7 @@ DisplayMenu("LT REA DAQ", -1)
         MenuPick(5, 10, 15, 20, 25)
       MenuItem("Min WD, deg", ch_wdfilt_min)
       MenuItem("Max WD, deg", ch_wdfilt_max)
+      MenuItem("Max RH, %", ch_rhfilt_max)
       MenuItem("Max fetch N, m", ch_site_fetch_N)
       MenuItem("Max fetch E, m", ch_site_fetch_E)
       MenuItem("Max fetch S, m", ch_site_fetch_S)
@@ -657,6 +671,8 @@ DisplayMenu("LT REA DAQ", -1)
     SubMenu("Samp filt run means")
       MenuItem("WD (min)", WDFILT_TIME)
         MenuPick(WDFILT_TIME, 1, 2, 3, 4, 5, 10, 15)
+      MenuItem("RH (min)", RHFILT_TIME)
+        MenuPick(RHFILT_TIME, 1, 2, 3, 4, 5, 10, 15)
     EndSubMenu
     MenuRecompile("Apply now?", recompile)
       MenuPick(Cancel,Yes)
@@ -690,6 +706,7 @@ Sub set_default_choices() '-------------------------------------------------
   ch_fill_margin = DEF_FILL_MARGIN
   ch_wdfilt_min = DEF_WDFILT_MIN
   ch_wdfilt_max = DEF_WDFILT_MAX
+  ch_rhfilt_max = DEF_RHFILT_MAX
 EndSub
 
 Sub populate_choices()
@@ -718,6 +735,8 @@ Sub save_current_choices()
   If (ch_wdfilt_min < 0) Then (ch_wdfilt_min = 0)
   If (ch_wdfilt_max > 359) Then (ch_wdfilt_max = 359)
   If (ch_wdfilt_max < ch_wdfilt_min) Then (ch_wdfilt_max = ch_wdfilt_min)
+  If (ch_rhfilt_max < RHFILT_MIN) Then (ch_rhfilt_max = RHFILT_MIN)
+  If (ch_rhfilt_max > 100) Then (ch_rhfilt_max = 100)
 
   If (ch_fill_margin < MARGIN_MIN) Then (ch_fill_margin = MARGIN_MIN)
   If (ch_fill_margin > MARGIN_MAX) Then (ch_fill_margin = MARGIN_MAX)
@@ -738,6 +757,7 @@ Sub save_current_choices()
   ch_site_fetch_W = INT(ch_site_fetch_W)
   ch_wdfilt_min = INT(ch_wdfilt_min)
   ch_wdfilt_max = INT(ch_wdfilt_max)
+  ch_rhfilt_max = INT(ch_rhfilt_max)
   ch_fill_margin = INT(ch_fill_margin)
   Move(settings(1),NUM_SETTINGS,choice(1),NUM_SETTINGS)
   Calfile(settings,NUM_SETTINGS,SETTINGS_FILE,WRITEFILE)
@@ -848,7 +868,8 @@ BeginProg
       vlv_up_ON = False
       vlv_dn_ON = False
       vlv_status = 0
-      If poor_WD Then vlv_status += &b100 'WD flag
+      If poor_WD Then vlv_status += &b0100 'WD flag
+      If poor_RH Then vlv_status += &b1000 'RH flag (rain proxy)
     ElseIf (Uz_rot >= deadband) Then
       vlv_up_ON = True
       vlv_dn_ON = False
@@ -953,6 +974,8 @@ BeginProg
     VoltDiff(hmp_T,1,mv1000,HMP_T_DF,True,0,INTEG,HMP_T_MULT,HMP_T_OFF)
     VoltDiff(hmp_RH,1,mv1000,HMP_RH_DF,True,0,INTEG,HMP_RH_MULT,HMP_RH_OFF)
     VaporPressure(hmp_e, hmp_T, hmp_RH)
+    AvgRun(mean_RH,1,hmp_RH,RHFILT_RUNAVG) 'HACK FIXME this is naive filter,
+    'should be ratio of run mean H2O vapor press to run sat. H2O vapor press
 
     VoltSe(press_can_UP,1,mv5000,P_CAN_UP_SE,True,0,INTEG, P_CAN_UP_MLT,P_CAN_UP_OFF)
     VoltSe(press_can_DN,1,mv5000,P_CAN_DN_SE,True,0,INTEG, P_CAN_DN_MLT,P_CAN_DN_OFF)
@@ -986,7 +1009,9 @@ BeginProg
     mean_WD = INT(ATN2(-1*mean_Ux,-1*mean_Uy)*DperR + _
                        SONIC_VAZ + sonic_azimuth + site_declin + 360) MOD 360
     poor_WD = mean_WD < wdfilt_min OR mean_WD > wdfilt_max
-    wait_flag = poor_WD
+    poor_RH = mean_RH > rhfilt_max
+
+    wait_flag = poor_WD OR poor_RH
   NextScan
 
   SlowSequence
