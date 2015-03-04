@@ -19,6 +19,8 @@ Const VERSION = ""
 ConstTable
   Const UTC_OFFSET = -8 'Pacific Standard Time
   Const DAYS_OF_DATA = 2 'to keep test data files sane sizes
+  Const WDFILT_TIME = 5 'min
+  Const FILT_INTV = 15 'seconds
 
   'not appropriate for PickList so not available in Initial Setup custom menu
   Const MARGIN_MIN = 5 '%
@@ -28,8 +30,6 @@ ConstTable
   Const DECLIN_MAX = 35 'deg E of TN
   Const DBMULT_MAX = 2 'ratio
   Const PRESS_RUNAVG = 5 'seconds (# slow intv.)
-  Const WDFILT_TIME = 5 'min
-  Const FILT_INTV = 15 'seconds
 EndConstTable
 
 
@@ -652,6 +652,12 @@ DisplayMenu("LT REA DAQ", -1)
   SubMenu("Initial setup")
     MenuItem("Time zone", UTC_OFFSET)
       MenuPick(UTC_OFFSET,-8,-7,-6,-5,-4) 'FIXME: not valid outside USA
+    MenuItem("Samp filt eval freq (sec)", FILT_INTV)
+      MenuPick(FILT_INTV, 1, 3, 5, 15, 30, 60, 300)
+    SubMenu("Samp filt run means")
+      MenuItem("WD (min)", WDFILT_TIME)
+        MenuPick(WDFILT_TIME, 1, 2, 3, 4, 5, 10, 15)
+    EndSubMenu
     MenuRecompile("Apply now?", recompile)
       MenuPick(Cancel,Yes)
   EndSubMenu
