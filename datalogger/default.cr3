@@ -816,16 +816,7 @@ BeginProg
 '      run_already_queued = False
     EndIf
 
-    'TODO: compare to longer-term running mean of barometric pressure?
-    '      OR maybe compare to minimum barometric pressure in last 24 hrs?
-    max_can_press = mean_baro * (CRITICAL_RATIO - can_fill_margin)
-    max_pump_press = max_can_press * PUMP_SF
-    cans_full = mean_can_UP >= max_can_press OR mean_can_DN >= max_can_press
-    pump_fault = is_running AND (mean_pump_UP >= max_pump_press OR _
-                                 mean_pump_DN >= max_pump_press)
-    'FIXME: pump_fault has race condition where cannot be true until >5 sec 
-    '       after start of run, therefore can't be used as flag proper
-
+    'LOGIC PERFORMED AT 1 Hz
     If (cans_full) Then 'TODO FIXME: OR pump_fault) Then
       'do not begin run
     ElseIf (run_queued) Then 'TODO qualify with start time
@@ -967,6 +958,16 @@ BeginProg
     AvgRun(mean_pump_UP,1,press_pump_UP,PRESS_RUNAVG)
     AvgRun(mean_pump_DN,1,press_pump_DN,PRESS_RUNAVG)
     AvgRun(mean_baro,1,press_baro,PRESS_RUNAVG)
+
+    'TODO: compare to longer-term running mean of barometric pressure?
+    '      OR maybe compare to minimum barometric pressure in last 24 hrs?
+    max_can_press = mean_baro * (CRITICAL_RATIO - can_fill_margin)
+    max_pump_press = max_can_press * PUMP_SF
+    cans_full = mean_can_UP >= max_can_press OR mean_can_DN >= max_can_press
+    pump_fault = is_running AND (mean_pump_UP >= max_pump_press OR _
+                                 mean_pump_DN >= max_pump_press)
+    'FIXME: pump_fault has race condition where cannot be true until >5 sec 
+    '       after start of run, therefore can't be used as flag proper
 
     mean_WS = SQR(mean_Ux*mean_Ux + mean_Uy*mean_Uy)
     mean_WD = INT(ATN2(-1*mean_Ux,-1*mean_Uy)*DperR + _
