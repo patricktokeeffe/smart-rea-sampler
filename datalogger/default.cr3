@@ -58,11 +58,14 @@ Const SW12_PMP_P = 10 'SW12-2
 
 
 '============================ CONSTANTS =====================================
+Const PI = 3.14159
+Const K_ = 0.41    'Von Karman constant    dimless
+Const G_ = 9.81    'Gravity    m/s^2
+Const CRITICAL_RATIO = 0.528
+
 Const MBAR_PER_PSI = 68.947573 'mbar/psia
 Const MBAR_PER_INHG = 33.864882 'mbar/inHg
-Const PI = 3.14159
 Const DperR = 180/PI
-Const CRITICAL_RATIO = 0.528
 
 Const INTEG = 250     'analog integration time
 Const FAST_INTV = 100 'milliseconds, scan freq.
@@ -294,6 +297,12 @@ Alias beta(2) = beta_Ts_Uz_rot
 Alias beta(3) = beta_Ts_W
 Units beta = dimless
 
+Public turb(2) 'assorted turbulence/flux-related vars
+Alias turb(1) = u_star    'friction velocity
+Alias turb(2) = L_        'Obukhov length
+Units u_star = m/s
+Units L_ = m
+
 Public vlv_fraction(5)
 Alias vlv_fraction(1) = vlv_up_fraction
 Alias vlv_fraction(2) = vlv_dn_fraction
@@ -521,6 +530,8 @@ DataTable(stats,True,1000) 'FIXME - # records
   Average(1,press_pump_DN,IEEE4,(inbetween_slow_scan OR press_pump_DN=NAN))
   Average(1,press_baro,IEEE4,(inbetween_slow_scan OR press_baro=NAN))
 
+  Sample(1,u_star,IEEE4)
+  Sample(1,L_,IEEE4)
   Sample(1,deadband,IEEE4)  
   Sample(1,eta,IEEE4)
   Sample(1,theta,IEEE4)
@@ -831,6 +842,7 @@ Sub setup()
   PortSet(SW12_PMP_P,True)
 EndSub
 
+
 '============================== PROGRAM =====================================
 BeginProg
   setup()
@@ -938,6 +950,8 @@ BeginProg
       Else
         sonic_WD_rslt_Avg = (Round(sonic_WD_rslt_Avg,0)+sonic_azimuth) MOD 360
       EndIf
+      u_star = SQR(SQR(cov_Ux_Uz*cov_Ux_Uz + cov_Uy_Uz*cov_Uy_Uz))
+      L_ = -u_star^3 * (hmp_T_Avg+273.15)/(K_*G_*cov_Ts_Uz)
       
       SatVP(hmp_e_sat_Avg, hmp_T_Avg)
       hmp_RH_Avg = 100*hmp_e_Avg/hmp_e_sat_Avg
