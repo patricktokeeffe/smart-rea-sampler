@@ -294,11 +294,12 @@ Alias beta(2) = beta_Ts_Uz_rot
 Alias beta(3) = beta_Ts_W
 Units beta = dimless
 
-Public vlv_fraction(4)
+Public vlv_fraction(5)
 Alias vlv_fraction(1) = vlv_up_fraction
 Alias vlv_fraction(2) = vlv_dn_fraction
 Alias vlv_fraction(3) = unfilt_vlv_up_fraction
 Alias vlv_fraction(4) = unfilt_vlv_dn_fraction
+Alias vlv_fraction(5) = fraction_filtered_out
 Units vlv_fraction = ratio
 
 Public run_means(12)
@@ -526,6 +527,7 @@ DataTable(stats,True,1000) 'FIXME - # records
   Sample(1,vlv_dn_fraction,IEEE4)
   Sample(1,unfilt_vlv_up_fraction,IEEE4)
   Sample(1,unfilt_vlv_dn_fraction,IEEE4)
+  Sample(1,fraction_filtered_out,IEEE4)
 EndTable
 
 DataTable(rea,True,10)
@@ -541,6 +543,7 @@ DataTable(rea,True,10)
   Sample(1,vlv_dn_fraction,IEEE4)
   Sample(1,unfilt_vlv_up_fraction,IEEE4)
   Sample(1,unfilt_vlv_dn_fraction,IEEE4)
+  Sample(1,fraction_filtered_out,IEEE4)
   Sample(1,elapsed_time,IEEE4)
     FieldNames("run_duration")
   'TODO starting pressures? ending pressures?
@@ -800,6 +803,7 @@ Sub end_run() '-------------------------------------------------------------
     vlv_dn_fraction = vlv_dn_ON_Tot2 / vlv_possible2
     unfilt_vlv_up_fraction = unfilt_vlv_up_ON_Tot2 / unfilt_vlv_possible2
     unfilt_vlv_dn_fraction = unfilt_vlv_dn_ON_Tot2 / unfilt_vlv_possible2
+    fraction_filtered_out = 1.0 - (vlv_possible2/unfilt_vlv_possible2)
     CallTable(rea)
   EndIf
   
@@ -944,6 +948,7 @@ BeginProg
       vlv_dn_fraction = vlv_dn_ON_Tot/vlv_possible
       unfilt_vlv_up_fraction = unfilt_vlv_up_ON_Tot/unfilt_vlv_possible
       unfilt_vlv_dn_fraction = unfilt_vlv_dn_ON_Tot/unfilt_vlv_possible
+      fraction_filtered_out = 1.0 - (vlv_possible/unfilt_vlv_possible)
     EndIf 'new record output
     CallTable(stats)
     
