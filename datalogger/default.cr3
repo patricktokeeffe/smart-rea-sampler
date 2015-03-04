@@ -317,7 +317,7 @@ Units run_means = mbar
 Units mean_Ux = m/s
 Units mean_Uy = m/s
 Units mean_WD = degEofTN
-Units mean_WS = m/
+Units mean_WS = m/s
 Units mean_RH = %
 
 '----------------------------- OPERATION -----------------------------------
