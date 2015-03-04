@@ -496,14 +496,21 @@ DataTable(stats,True,1000) 'FIXME - # records
   DataInterval(0,STATS_INTV,Min,10)
   CardOut(STOPFULL,DAYS_OF_DATA*1440/STATS_INTV)
 
-  Average(1,sonic_Ts,FP2,disable_sonic or sonic_Ts=NAN)
-  StdDev (1,sonic_Ts,FP2,disable_sonic)
-  StdDev (1,sonic_Uz,FP2,disable_sonic) 'TODO ? replace this with Uz_Std?
-  Sample (1,sonic_WS_sclr_Avg,FP2)
-  Sample (1,sonic_WS_rslt_Avg,FP2)
-  Sample (1,sonic_WD_rslt_Avg,FP2)
-  Sample (1,sonic_WD_csi_Std,FP2)
-  
+  Sample(1,Ts_Avg,FP2)
+    FieldNames("sonic_Ts_Avg")
+  Sample(1,Ts_Std,FP2)
+    FieldNames("sonic_Ts_Std")
+  Sample(1,sonic_WS_sclr_Avg,FP2)
+  Sample(1,sonic_WS_rslt_Avg,FP2)
+  Sample(1,sonic_WD_rslt_Avg,FP2)
+  Sample(1,sonic_WD_csi_Std,FP2)
+
+  Sample (1,Uz_Std,FP2)
+    FieldNames("sonic_Uz_Std")
+  Sample(1,Uz_rot_Std,IEEE4)
+    FieldNames("sonic_Uz_rot_Std")
+  Sample(1,W_Std,IEEE4)
+
   Sample (1,hmp_T_Avg,FP2)
   Sample (1,hmp_RH_Avg,FP2)
   Sample (1,hmp_e_Avg,FP2)
@@ -516,10 +523,7 @@ DataTable(stats,True,1000) 'FIXME - # records
 
   Sample(1,deadband,IEEE4)  
   Sample(1,eta,IEEE4)
-  Sample(1,theta,IEEE4)  
-  Sample(1,Uz_Std,IEEE4)
-  Sample(1,Uz_rot_Std,IEEE4)
-  Sample(1,W_Std,IEEE4)
+  Sample(1,theta,IEEE4)
   Sample(1,beta_Ts_Uz,IEEE4)
   Sample(1,beta_Ts_Uz_rot,IEEE4)
   Sample(1,beta_Ts_W,IEEE4)
@@ -921,7 +925,7 @@ BeginProg
       W_Avg = Uz_Avg*CT - Ux_Avg*ST*SE - Uy_Avg*ST*SE
       'HINT in following line *_Std values are still covariances
       W_Std = SQR(Uz_Std*CT*CT + Ux_Std*ST*ST*CE*CE + Uy_Std*ST*ST*SE*SE - 2*cov_Uy_Uz*CT*ST*SE + 2*cov_Ux_Uy*CE*ST*ST*SE)
-      'now convert cov -> std
+      'now convert var -> std
       Ts_Std = SQR(Ts_Std)
       Uz_Std = SQR(Uz_Std)
       Uz_rot_Std = SQR(Uz_rot_Std)
