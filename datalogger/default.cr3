@@ -888,6 +888,7 @@ BeginProg
     'LOGIC PERFORMED AT 1 Hz
     If (cans_full) Then 'TODO FIXME: OR pump_fault) Then
       'do not begin run
+      If (is_running) Then end_run()
     ElseIf (run_queued) Then 'TODO qualify with start time
       is_running = True
       run_queued = Cancel
