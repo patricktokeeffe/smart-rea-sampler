@@ -480,7 +480,7 @@ EndTable
 
 DataTable(ts_fast,True,1000) '----------------- FINAL OUTPUTS ---------------
   DataInterval(0,FAST_INTV,msec,10) 'FIXME - previous line, # records
-  CardOut(STOPFULL,DAYS_OF_DATA*864000/FAST_INTV)
+  CardOut(STOPFULL,DAYS_OF_DATA*86400*1000/FAST_INTV)
   
   Sample(1,sonic_Ux,IEEE4) 'TODO - FP2? only reported to two decimal places
   Sample(1,sonic_Uy,IEEE4)
