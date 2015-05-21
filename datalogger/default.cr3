@@ -115,7 +115,7 @@ Const GPS_MED_NUM = 1440/GPS_INTV 'max # of values included in median calc
 '============================= VARIABLES ====================================
 Dim sonic_bytes
 Dim sonic_record As String * SONIC_RECLEN
-Public sonic(5)
+Dim sonic(5)
 Alias sonic(1) = sonic_Ux
 Alias sonic(2) = sonic_Uy
 Alias sonic(3) = sonic_Uz
@@ -125,9 +125,9 @@ Units sonic = m/s
 Units sonic_Ts = degC
 Units sonic_diag = arb
 
-Public disable_sonic As Boolean
+Dim disable_sonic As Boolean
 
-Public hmp(3)
+Dim hmp(3)
 Alias hmp(1) = hmp_T
 Alias hmp(2) = hmp_RH
 Alias hmp(3) = hmp_e
@@ -135,7 +135,7 @@ Units hmp_T = degC
 Units hmp_RH = %
 Units hmp_e = kPa
 
-Public pressure(5)
+Dim pressure(5)
 Alias pressure(1) = press_can_UP
 Alias pressure(2) = press_can_DN
 Alias pressure(3) = press_pump_UP
@@ -144,7 +144,7 @@ Alias pressure(5) = press_baro
 Units pressure = mbar
 
 Dim nmea_str(2) As String * 90
-Public gps16x(15)
+Dim gps16x(15)
 Alias gps16x(1)  = lat_deg        '(+)=North, (-)=South
 Alias gps16x(2)  = lat_min
 Alias gps16x(3)  = long_deg       '(+)=East, (-)=West
@@ -172,11 +172,11 @@ Units max_clock_change = ms
 Units num_clock_change = occurrences
 
 '-------------------------- PROCESSING -------------------------------------
-Public cov_sonic(1,4) '= [ [Ts, Ux, Uy, Uz] ]
-Public cov_rotate(1,2) '= [ [Ts, Uz_rot] ]
-Public cov_rea(1,3) '= [ [Ts, Uz, Uz_rot] ]
+Dim cov_sonic(1,4) '= [ [Ts, Ux, Uy, Uz] ]
+Dim cov_rotate(1,2) '= [ [Ts, Uz_rot] ]
+Dim cov_rea(1,3) '= [ [Ts, Uz, Uz_rot] ]
 
-Public work_out(31)
+Dim work_out(31)
 Alias work_out(1)  = Ux_Avg '4x Average()
 Alias work_out(2)  = Uy_Avg
 Alias work_out(3)  = Uz_Avg
@@ -230,7 +230,7 @@ Units unfilt_vlv_up_ON_Tot = scans
 Units unfilt_vlv_dn_ON_Tot = scans
 Units unfilt_vlv_possible = scans
 
-Public rea_out(14)
+Dim rea_out(14)
 Alias rea_out(1)  = Ts_Std2 'Covariance(), 6 vals
 Alias rea_out(2)  = cov_Ts_Uz2
 Alias rea_out(3)  = cov_Ts_Uz_rot2
@@ -257,12 +257,12 @@ Units unfilt_vlv_up_ON_Tot2 = scans
 Units unfilt_vlv_dn_ON_Tot2 = scans
 Units unfilt_vlv_possible2 = scans
 
-Public Uz_rot 'real-time coordinate-rotated
+Dim Uz_rot 'real-time coordinate-rotated
 Units Uz_rot = m/s
 
 Dim sqrt_UV
 Dim sqrt_UVW
-Public rot_angles(6)
+Dim rot_angles(6)
 Alias rot_angles(1) = CE
 Alias rot_angles(2) = SE
 Alias rot_angles(3) = CT
@@ -272,32 +272,32 @@ Alias rot_angles(6) = theta
 Units eta = degrees
 Units theta = degrees
 
-Public rotated(4) 'stream-wise coordinates
+Dim rotated(4) 'stream-wise coordinates
 Alias rotated(1) = U_Avg
 Alias rotated(2) = V_Avg
 Alias rotated(3) = W_Avg
 Alias rotated(4) = W_Std
 Units rotated = m/s
 
-Public derived(2)
+Dim derived(2)
 Alias derived(1) = hmp_e_sat_Avg
 Alias derived(2) = hmp_RH_Avg
 Units hmp_e_sat_Avg = kPa
 Units hmp_RH_Avg = %
 
-Public rea_sim(3)
+Dim rea_sim(3)
 Alias rea_sim(1) = rea_Ts_up
 Alias rea_sim(2) = rea_Ts_dn
 Alias rea_sim(3) = delta_Ts
 Units rea_sim = degC
 
-Public beta(3)
+Dim beta(3)
 Alias beta(1) = beta_Ts_Uz
 Alias beta(2) = beta_Ts_Uz_rot
 Alias beta(3) = beta_Ts_W
 Units beta = dimless
 
-Public turb(3) 'assorted turbulence/flux-related vars
+Dim turb(3) 'assorted turbulence/flux-related vars
 Alias turb(1) = u_star    'friction velocity
 Alias turb(2) = L_        'Obukhov length
 Alias turb(3) = itt       'integral turbulence test
@@ -305,7 +305,7 @@ Units u_star = m/s
 Units L_ = m
 Units itt = %
 
-Public vlv_fraction(5)
+Dim vlv_fraction(5)
 Alias vlv_fraction(1) = vlv_up_fraction
 Alias vlv_fraction(2) = vlv_dn_fraction
 Alias vlv_fraction(3) = unfilt_vlv_up_fraction
@@ -313,7 +313,7 @@ Alias vlv_fraction(4) = unfilt_vlv_dn_fraction
 Alias vlv_fraction(5) = fraction_filtered_out
 Units vlv_fraction = ratio
 
-Public run_means(12)
+Dim run_means(12)
 Alias run_means(1)  = mean_can_UP
 Alias run_means(2)  = mean_can_DN
 Alias run_means(3)  = mean_pump_UP
@@ -324,7 +324,14 @@ Alias run_means(7)  = mean_Uy
 Alias run_means(8)  = mean_WD
 Alias run_means(9)  = mean_WS
 Alias run_means(10) = mean_RH
-Units run_means = mbar
+'Units run_means = mbar    'HACK: Bug is present in CR3000.Std.27 which prevents
+                           'assigning units to aliases if array has been assigned
+                           'units. Only affects Dim, not Public, variables 
+Units mean_can_UP = mbar
+Units mean_can_DN = mbar
+Units mean_pump_UP = mbar
+Units mean_pump_DN = mbar
+Units mean_baro = mbar
 Units mean_Ux = m/s
 Units mean_Uy = m/s
 Units mean_WD = degEofTN
@@ -332,33 +339,33 @@ Units mean_WS = m/s
 Units mean_RH = %
 
 '----------------------------- OPERATION -----------------------------------
-Public deadband
+Dim deadband
 Dim neg_deadband
 Units deadband = m/s
 
-Public azimuth
+Dim azimuth
 Units azimuth = degEofTN
 
-Public vlv_status
-Public vlv_ON(2) As Boolean
+Dim vlv_status
+Dim vlv_ON(2) As Boolean
 Alias vlv_ON(1) = vlv_up_ON
 Alias vlv_ON(2) = vlv_dn_ON
 Public debug_up_vlv
 Public debug_dn_vlv
 
-Public elapsed_time As Long
+Dim elapsed_time As Long
 Units elapsed_time = min
 
-Public is_running As Boolean
-Public cans_full As Boolean
-Public pump_fault As Boolean
+Dim is_running As Boolean
+Dim cans_full As Boolean
+Dim pump_fault As Boolean
 
 Dim can_fill_margin
-Public max_can_press
-Public max_pump_press
+Dim max_can_press
+Dim max_pump_press
 
-Public wait_flag As Boolean
-Public poor_condition_flags(2) As Boolean
+Dim wait_flag As Boolean
+Dim poor_condition_flags(2) As Boolean
 Alias poor_condition_flags(1) = poor_WD
 Alias poor_condition_flags(2) = poor_RH
 
