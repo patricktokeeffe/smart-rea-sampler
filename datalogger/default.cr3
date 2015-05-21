@@ -125,7 +125,6 @@ Units sonic_Ts = degC
 Units sonic_diag = arb
 
 Public disable_sonic As Boolean
-Public sonic_azimuth = {0}
 
 Public hmp(3)
 Alias hmp(1) = hmp_T
@@ -971,7 +970,7 @@ BeginProg
         sonic_WD_rslt_Avg = NAN
         sonic_WD_csi_Std = NAN
       Else
-        sonic_WD_rslt_Avg = (Round(sonic_WD_rslt_Avg,0)+sonic_azimuth) MOD 360
+        sonic_WD_rslt_Avg = (Round(sonic_WD_rslt_Avg,0) + azimuth) MOD 360
       EndIf
       u_star = SQR(SQR(cov_Ux_Uz*cov_Ux_Uz + cov_Uy_Uz*cov_Uy_Uz))
       L_ = -u_star^3 * (hmp_T_Avg+273.15)/(K_*G_*cov_Ts_Uz)
@@ -1054,7 +1053,7 @@ BeginProg
   Scan(FILT_INTV,sec,1,0)
     mean_WS = SQR(mean_Ux*mean_Ux + mean_Uy*mean_Uy)
     mean_WD = INT(ATN2(-1*mean_Ux,-1*mean_Uy)*DperR + _
-                       SONIC_VAZ + sonic_azimuth + site_declin + 360) MOD 360
+                       SONIC_VAZ + azimuth + site_declin + 360) MOD 360
     poor_WD = mean_WD < wdfilt_min OR mean_WD > wdfilt_max
     poor_RH = mean_RH > rhfilt_max
 
