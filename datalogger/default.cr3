@@ -73,7 +73,7 @@ Const FAST_BUFF = 10
 Const SLOW_INTV = 1   'seconds, scan freq.
 Const SLOW_BUFF = 5
 Const STATS_INTV = 5 'minutes, stats output
-Const STOPFULL = 1    'stop recording when tables are full
+Const STOPFULL = 0    'ring-fill data tables
 Const WDFILT_RUNAVG = (1000/FAST_INTV)*60*WDFILT_TIME
 Const RHFILT_RUNAVG = (60/SLOW_INTV)*RHFILT_TIME
 
