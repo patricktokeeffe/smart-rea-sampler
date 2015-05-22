@@ -81,6 +81,7 @@ Const RUN_TIMER = 1
 Const START = 0
 Const STOP = 1
 Const STOP_RESET = 3
+Const QUERY = 4
 
 Const SONIC_RECLEN = 34 'characters per record
 Const SONIC_BAUD = 38400
@@ -892,8 +893,8 @@ BeginProg
       is_running = True
       run_queued = Cancel
       elapsed_time = Timer(RUN_TIMER,min,START)
-'    ElseIf (is_running) Then
-'      elapsed_time = Timer(RUN_TIMER,min,QUERY)
+    ElseIf (is_running) Then
+      elapsed_time = Timer(RUN_TIMER,min,QUERY)
 '      If (elapsed_time >= run_dur) Then end_run()
     EndIf
     PortSet(CTRL_PUMPS,is_running)
