@@ -669,7 +669,7 @@ DisplayMenu("LT REA DAQ", -1)
       MenuItem("Default, m/s", ch_dband_def)
     EndSubMenu
     SubMenu("Site & sensors")
-      MenuItem("Sonic height, in", ch_sonic_height)
+      MenuItem("Sonic height, m", ch_sonic_height)
       MenuItem("Sonic azimuth, deg", ch_sonic_azimuth)
       MenuItem("Mag. declin., deg", ch_site_declin)
       MenuItem("Roughness length, in", ch_site_rufness)
