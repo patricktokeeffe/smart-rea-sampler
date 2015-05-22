@@ -113,6 +113,8 @@ Const GPS_MED_NUM = 1440/GPS_INTV 'max # of values included in median calc
 
 
 '============================= VARIABLES ====================================
+Public debug_on As Boolean
+
 Dim sonic_bytes
 Dim sonic_record As String * SONIC_RECLEN
 Dim sonic(5)
@@ -452,6 +454,24 @@ Units wdfilt_max = defEofTN
 Units rhfilt_max = %
 
 
+'========================  REMOTE MONITORING  ===============================
+DataTable(debug,True,2)
+  Sample(5,sonic(1),IEEE4)
+  Sample(2,hmp(1),IEEE4)
+  Sample(5,pressure(1),IEEE4)
+  Sample(15,gps16x(1),IEEE4)
+  Sample(1,deadband,IEEE4)
+  Sample(2,vlv_ON(1),Boolean)
+  Sample(1,elapsed_time,IEEE4)
+  Sample(1,is_running,Boolean)
+  Sample(1,cans_full,Boolean)
+  Sample(1,pump_fault,Boolean)
+  Sample(1,poor_WD,Boolean)
+  Sample(1,poor_RH,Boolean)
+  Sample(1,rea_finished,Boolean)
+EndTable
+
+
 '============================ DATA TABLES ===================================
 DataTable(work,True,2)
   DataInterval(0,STATS_INTV,Min,1)
@@ -635,7 +655,9 @@ EndTable
 
 '============================= CUSTOM MENUS =================================
 Const Yes = True
+Const Enable = True
 Const Cancel = False
+Const Disable = False
 Const operational = 0
 Const force_ON = -1
 Const force_OFF = 1
@@ -741,6 +763,8 @@ DisplayMenu("LT REA DAQ", -1)
       DisplayValue("GPS max adj", max_clock_change)
       DisplayValue("GPS num adj", num_clock_change)
     EndSubMenu
+    MenuItem("Debug table", debug_on)
+      MenuPick(Disable, Enable)
     MenuItem("UP valve is", debug_up_vlv)
       MenuPick(operational, force_ON, force_OFF)
     MenuItem("DN valve is", debug_dn_vlv)
@@ -1116,6 +1140,7 @@ BeginProg
     'FIXME: pump_fault has race condition where cannot be true until >5 sec 
     '       after start of run, therefore can't be used as flag proper
 
+    If (debug_on) Then CallTable(debug)
     CallTable(ts_slow)
     just_had_slow_scan = True
   NextScan
