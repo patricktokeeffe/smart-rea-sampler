@@ -401,24 +401,24 @@ Const DEF_WDFILT_MIN = 0 'deg E of TN
 Const DEF_WDFILT_MAX = 359 'deg E of TN 
 Const DEF_RHFILT_MAX = 90 '%
 
-Dim choice(NUM_SETTINGS)
-Alias choice(1)  = ch_dband_mult
-Alias choice(2)  = ch_dband_min
-Alias choice(3)  = ch_dband_def
-Alias choice(4)  = ch_sonic_azimuth
-Alias choice(5)  = ch_sonic_height
-Alias choice(6)  = ch_site_declin
-Alias choice(7)  = ch_site_rufness
-Alias choice(8)  = ch_site_fetch_N
-Alias choice(9)  = ch_site_fetch_E
-Alias choice(10) = ch_site_fetch_S
-Alias choice(11) = ch_site_fetch_W
-Alias choice(12) = ch_fill_margin
-Alias choice(13) = ch_wdfilt_min
-Alias choice(14) = ch_wdfilt_max
-Alias choice(15) = ch_rhfilt_max
+Public choice(NUM_SETTINGS)
+Alias choice(1)  = set_dband_mult
+Alias choice(2)  = set_dband_min
+Alias choice(3)  = set_dband_def
+Alias choice(4)  = set_sonic_azimuth
+Alias choice(5)  = set_sonic_height
+Alias choice(6)  = set_site_declin
+Alias choice(7)  = set_site_rufness
+Alias choice(8)  = set_site_fetch_N
+Alias choice(9)  = set_site_fetch_E
+Alias choice(10) = set_site_fetch_S
+Alias choice(11) = set_site_fetch_W
+Alias choice(12) = set_fill_margin
+Alias choice(13) = set_wdfilt_min
+Alias choice(14) = set_wdfilt_max
+Alias choice(15) = set_rhfilt_max
 
-Public settings(NUM_SETTINGS)
+Dim settings(NUM_SETTINGS)
 Alias settings(1)  = dband_mult
 Alias settings(2)  = dband_min
 Alias settings(3)  = dband_def
@@ -639,9 +639,9 @@ Const Cancel = False
 Const operational = 0
 Const force_ON = -1
 Const force_OFF = 1
-Dim save_settings As Boolean
-Dim discard_settings As Boolean
-Dim reset_settings As Boolean
+Public save_settings As Boolean
+Public discard_settings As Boolean
+Public reset_settings As Boolean
 Dim recompile As Boolean
 
 DisplayMenu("LT REA DAQ", -1)
@@ -665,26 +665,26 @@ DisplayMenu("LT REA DAQ", -1)
 
   SubMenu("Settings")
     SubMenu("Sampling")
-      MenuItem("Fill margin, %", ch_fill_margin)
+      MenuItem("Fill margin, %", set_fill_margin)
         MenuPick(5, 10, 15, 20, 25)
-      MenuItem("Min WD, deg", ch_wdfilt_min)
-      MenuItem("Max WD, deg", ch_wdfilt_max)
-      MenuItem("Max RH, %", ch_rhfilt_max)
-      MenuItem("Max fetch N, m", ch_site_fetch_N)
-      MenuItem("Max fetch E, m", ch_site_fetch_E)
-      MenuItem("Max fetch S, m", ch_site_fetch_S)
-      MenuItem("Max fetch W, m", ch_site_fetch_W)
+      MenuItem("Min WD, deg", set_wdfilt_min)
+      MenuItem("Max WD, deg", set_wdfilt_max)
+      MenuItem("Max RH, %", set_rhfilt_max)
+      MenuItem("Max fetch N, m", set_site_fetch_N)
+      MenuItem("Max fetch E, m", set_site_fetch_E)
+      MenuItem("Max fetch S, m", set_site_fetch_S)
+      MenuItem("Max fetch W, m", set_site_fetch_W)
     EndSubMenu
     SubMenu("Deadband")
-      MenuItem("Multiplier", ch_dband_mult)
-      MenuItem("Minimum, m/s", ch_dband_min)
-      MenuItem("Default, m/s", ch_dband_def)
+      MenuItem("Multiplier", set_dband_mult)
+      MenuItem("Minimum, m/s", set_dband_min)
+      MenuItem("Default, m/s", set_dband_def)
     EndSubMenu
     SubMenu("Site & sensors")
-      MenuItem("Sonic height, m", ch_sonic_height)
-      MenuItem("Sonic azimuth, deg", ch_sonic_azimuth)
-      MenuItem("Mag. declin., deg", ch_site_declin)
-      MenuItem("Roughness length, in", ch_site_rufness)
+      MenuItem("Sonic height, m", set_sonic_height)
+      MenuItem("Sonic azimuth, deg", set_sonic_azimuth)
+      MenuItem("Mag. declin., deg", set_site_declin)
+      MenuItem("Roughness length, in", set_site_rufness)
     EndSubMenu
     SubMenu("Apply/cancel")
       MenuItem("Save now?", save_settings)
@@ -751,21 +751,21 @@ Sub update_deadband() 'FIXME TODO
 EndSub
 
 Sub set_default_choices() '-------------------------------------------------
-  ch_dband_mult = DEF_DBAND_MULT
-  ch_dband_min = DEF_DBAND_MIN
-  ch_dband_def = DEF_DBAND_DEF
-  ch_sonic_azimuth = DEF_SONIC_AZIMUTH
-  ch_sonic_height = DEF_SONIC_HEIGHT
-  ch_site_declin = DEF_SITE_DECLIN
-  ch_site_rufness = DEF_SITE_RUFNESS
-  ch_site_fetch_N = DEF_SITE_FETCH_N
-  ch_site_fetch_E = DEF_SITE_FETCH_E
-  ch_site_fetch_S = DEF_SITE_FETCH_S
-  ch_site_fetch_W = DEF_SITE_FETCH_W
-  ch_fill_margin = DEF_FILL_MARGIN
-  ch_wdfilt_min = DEF_WDFILT_MIN
-  ch_wdfilt_max = DEF_WDFILT_MAX
-  ch_rhfilt_max = DEF_RHFILT_MAX
+  set_dband_mult = DEF_DBAND_MULT
+  set_dband_min = DEF_DBAND_MIN
+  set_dband_def = DEF_DBAND_DEF
+  set_sonic_azimuth = DEF_SONIC_AZIMUTH
+  set_sonic_height = DEF_SONIC_HEIGHT
+  set_site_declin = DEF_SITE_DECLIN
+  set_site_rufness = DEF_SITE_RUFNESS
+  set_site_fetch_N = DEF_SITE_FETCH_N
+  set_site_fetch_E = DEF_SITE_FETCH_E
+  set_site_fetch_S = DEF_SITE_FETCH_S
+  set_site_fetch_W = DEF_SITE_FETCH_W
+  set_fill_margin = DEF_FILL_MARGIN
+  set_wdfilt_min = DEF_WDFILT_MIN
+  set_wdfilt_max = DEF_WDFILT_MAX
+  set_rhfilt_max = DEF_RHFILT_MAX
 EndSub
 
 Sub populate_choices()
@@ -774,50 +774,50 @@ EndSub
 
 Sub save_current_choices()
   'HINT treat azimuth differently since 0 is valid option
-  If (ch_sonic_azimuth < 0) Then
-    ch_sonic_azimuth = -1
+  If (set_sonic_azimuth < 0) Then
+    set_sonic_azimuth = -1
     azimuth = 0
   Else
-    ch_sonic_azimuth = ch_sonic_azimuth MOD 360
+    set_sonic_azimuth = set_sonic_azimuth MOD 360
     azimuth = sonic_azimuth
   EndIf
 
-  If (ch_sonic_height < 0) Then (ch_sonic_height = 0)
-  If (ch_site_declin < DECLIN_MIN) Then (ch_site_declin = DECLIN_MIN)
-  If (ch_site_declin > DECLIN_MAX) Then (ch_site_declin = DECLIN_MAX)
-  If (ch_site_fetch_N < 0) Then (ch_site_fetch_N = 0)
-  If (ch_site_fetch_E < 0) Then (ch_site_fetch_E = 0)
-  If (ch_site_fetch_S < 0) Then (ch_site_fetch_S = 0)
-  If (ch_site_fetch_W < 0) Then (ch_site_fetch_W = 0)
-  If (ch_site_rufness < 0) Then (ch_site_rufness = 0)
+  If (set_sonic_height < 0) Then (set_sonic_height = 0)
+  If (set_site_declin < DECLIN_MIN) Then (set_site_declin = DECLIN_MIN)
+  If (set_site_declin > DECLIN_MAX) Then (set_site_declin = DECLIN_MAX)
+  If (set_site_fetch_N < 0) Then (set_site_fetch_N = 0)
+  If (set_site_fetch_E < 0) Then (set_site_fetch_E = 0)
+  If (set_site_fetch_S < 0) Then (set_site_fetch_S = 0)
+  If (set_site_fetch_W < 0) Then (set_site_fetch_W = 0)
+  If (set_site_rufness < 0) Then (set_site_rufness = 0)
 
-  If (ch_wdfilt_min < 0) Then (ch_wdfilt_min = 0)
-  If (ch_wdfilt_max > 359) Then (ch_wdfilt_max = 359)
-  If (ch_wdfilt_max < ch_wdfilt_min) Then (ch_wdfilt_max = ch_wdfilt_min)
-  If (ch_rhfilt_max < RHFILT_MIN) Then (ch_rhfilt_max = RHFILT_MIN)
-  If (ch_rhfilt_max > 100) Then (ch_rhfilt_max = 100)
+  If (set_wdfilt_min < 0) Then (set_wdfilt_min = 0)
+  If (set_wdfilt_max > 359) Then (set_wdfilt_max = 359)
+  If (set_wdfilt_max < set_wdfilt_min) Then (set_wdfilt_max = set_wdfilt_min)
+  If (set_rhfilt_max < RHFILT_MIN) Then (set_rhfilt_max = RHFILT_MIN)
+  If (set_rhfilt_max > 100) Then (set_rhfilt_max = 100)
 
-  If (ch_fill_margin < MARGIN_MIN) Then (ch_fill_margin = MARGIN_MIN)
-  If (ch_fill_margin > MARGIN_MAX) Then (ch_fill_margin = MARGIN_MAX)
+  If (set_fill_margin < MARGIN_MIN) Then (set_fill_margin = MARGIN_MIN)
+  If (set_fill_margin > MARGIN_MAX) Then (set_fill_margin = MARGIN_MAX)
 
   'HINT order matters when validating dband settings!
-  If (ch_dband_min < 0) Then (ch_dband_min = 0)
-  If (ch_dband_def < ch_dband_min) Then (ch_dband_def = ch_dband_min)
-  If (ch_dband_mult > DBMULT_MAX) Then (ch_dband_mult = DBMULT_MAX)
-  If (ch_dband_mult < 0 OR (ch_dband_mult = 0 AND ch_dband_min > 0)) Then
-    ch_dband_mult = DEF_DBAND_MULT
+  If (set_dband_min < 0) Then (set_dband_min = 0)
+  If (set_dband_def < set_dband_min) Then (set_dband_def = set_dband_min)
+  If (set_dband_mult > DBMULT_MAX) Then (set_dband_mult = DBMULT_MAX)
+  If (set_dband_mult < 0 OR (set_dband_mult = 0 AND set_dband_min > 0)) Then
+    set_dband_mult = DEF_DBAND_MULT
   EndIf
 
-  ch_sonic_azimuth = INT(ch_sonic_azimuth)
-  ch_site_declin = INT(ch_site_declin)
-  ch_site_fetch_N = INT(ch_site_fetch_N)
-  ch_site_fetch_E = INT(ch_site_fetch_E)
-  ch_site_fetch_S = INT(ch_site_fetch_S)
-  ch_site_fetch_W = INT(ch_site_fetch_W)
-  ch_wdfilt_min = INT(ch_wdfilt_min)
-  ch_wdfilt_max = INT(ch_wdfilt_max)
-  ch_rhfilt_max = INT(ch_rhfilt_max)
-  ch_fill_margin = INT(ch_fill_margin)
+  set_sonic_azimuth = INT(set_sonic_azimuth)
+  set_site_declin = INT(set_site_declin)
+  set_site_fetch_N = INT(set_site_fetch_N)
+  set_site_fetch_E = INT(set_site_fetch_E)
+  set_site_fetch_S = INT(set_site_fetch_S)
+  set_site_fetch_W = INT(set_site_fetch_W)
+  set_wdfilt_min = INT(set_wdfilt_min)
+  set_wdfilt_max = INT(set_wdfilt_max)
+  set_rhfilt_max = INT(set_rhfilt_max)
+  set_fill_margin = INT(set_fill_margin)
   Move(settings(1),NUM_SETTINGS,choice(1),NUM_SETTINGS)
   Calfile(settings,NUM_SETTINGS,SETTINGS_FILE,WRITEFILE)
 
