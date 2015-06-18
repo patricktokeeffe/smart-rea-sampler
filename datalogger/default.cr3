@@ -645,6 +645,10 @@ Const CRLF = CHR(13) & CHR(10)
 Public test_email As Boolean
 Public smtp_response As String * 80
 
+Sub send_email(subject As String * 40, msg As String * 512)
+    EmailSend(SMTP_SERV,EMAIL_TO,EMAIL_FROM,subject,msg,"",SMTP_USER,SMTP_PASS,smtp_response)
+EndSub
+
 Sub send_startup_email()
   Dim subject As String * 40, msg As String * 512
   subject = "Start-up notice from " & self & " CR3000"
@@ -658,14 +662,14 @@ Sub send_startup_email()
   msg &= "Run signature: " & Status.RunSignature & CRLF
   msg &= "Program signature: " & Status.ProgSignature & CRLF
   msg &= "Power input (Volts): " & Status.Battery & CRLF
-  EmailSend(SMTP_SERV,EMAIL_TO,EMAIL_FROM,subject,msg,"",SMTP_USER,SMTP_PASS,smtp_response)
+  send_email(subject,msg)
 EndSub
 
 Sub send_test_email()
   Dim subject As String * 40, msg As String * 512
   subject = "Test email from " & self & " CR3000"
   msg = "This is the " & self & " CR3000. Testing 1.. 2.. 3.." & CRLF
-  EmailSend(SMTP_SERV,EMAIL_TO,EMAIL_FROM,subject,msg,"",SMTP_USER,SMTP_PASS,smtp_response)
+  send_email(subject,msg)
 EndSub
 
 Sub send_daily_email()
@@ -676,7 +680,7 @@ Sub send_daily_email()
   msg = "Good morning from " & self & " CR3000. Yesterday my temperature ranged from "
   msg &= FormatFloat(min_tmpr, "%3g") & " to "
   msg &= FormatFloat(max_tmpr, "%3g") & " degC. " & CRLF
-  EmailSend(SMTP_SERV,EMAIL_TO,EMAIL_FROM,subject,msg,"",SMTP_USER,SMTP_PASS,smtp_response)
+  send_email(subject,msg)
 EndSub
 
 
