@@ -683,6 +683,16 @@ Sub send_daily_email()
   send_email(subject,msg)
 EndSub
 
+Sub send_endrun_email()
+  Dim subject As String * 40, fmt As String * 512, msg As String * 512
+  subject = "REA run completed"
+  
+  fmt  = "This is the %s CR3000. An REA run just finished." & CRLF & CRLF
+  fmt &= "It took %2u minutes in total. Up-drafts were sampled %3.2f%% of the "
+  fmt &= "time; down-drafts %3.2f%%. " & CRLF
+  Sprintf(msg, fmt, self, elapsed_time, (vlv_up_fraction*100), (vlv_dn_fraction*100))
+  send_email(subject,msg)
+EndSub
 
 
 '============================= CUSTOM MENUS =================================
@@ -919,6 +929,7 @@ Sub end_run() '-------------------------------------------------------------
   
   rea_finished = False
   Timer(RUN_TIMER,min,STOP_RESET)
+  send_endrun_email()
 EndSub
 
 Sub reset_rotangles() '-----------------------------------------------------
