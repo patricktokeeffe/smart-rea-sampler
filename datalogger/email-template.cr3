@@ -1,0 +1,31 @@
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' Long-term canister-based trace gas flux measurement system
+' using the Relaxed Eddy Accumulation (REA) technique
+' 
+' Email settings file
+'
+' Laboratory for Atmospheric Research
+' Department of Civil & Environmental Engineering
+' Washington State University
+'
+' Licensed under the terms of The MIT License
+' Patrick O'Keeffe, Washington State University (2014)
+'
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+'                     THIS FILE IS A TEMPLATE
+'
+' File contains dummy values! Update as necessary and save as `email.cr3`
+'
+' Before compiling `default.cr3`, open `email.cr3` in CRBasic Editor, go
+' File > Save and Encrypt... and save with default name `email_Enc.cr3` 
+'
+' Before sending to datalogger, copy `email_Enc.cr3` to its CPU: drive
+'
+
+Const SMTP_SERV = "192.168.1.1:25"      'SMTP server optionally with port#
+Const SMTP_USER = "cr3000@example.com"  'SMTP account name
+Const SMTP_PASS = "the_email_password"  'SMTP account password
+Const EMAIL_TO  = "user@example.com"    'message recipient
+Const EMAIL_FROM = SMTP_USER            'message sender
+

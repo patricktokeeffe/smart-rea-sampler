@@ -3,3 +3,6 @@
 
 /third-party/*.pdf
 /third-party/*.jpg
+
+/datalogger/email.cr3
+/datalogger/email_Enc.cr3

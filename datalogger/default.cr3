@@ -7,8 +7,8 @@
 ' Washington State University
 '
 ' Licensed under the terms of The MIT License
+' Patrick O'Keeffe, Washington State University (2014)
 '
-' Contact:  Patrick O'Keeffe <pokeeffe@wsu.edu>
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 'manually update this constant with results of `git describe` prior to
@@ -171,6 +171,12 @@ Units since_gprmc = s
 Units max_clock_change = ms
 Units num_clock_change = occurrences
 
+Public cr3k(2)
+Alias cr3k(1) = logger_tmpr
+Alias cr3k(2) = logger_power
+Units logger_tmpr = degC
+Units logger_power = Vdc
+
 '-------------------------- PROCESSING -------------------------------------
 Public cov_sonic(1,4) '= [ [Ts, Ux, Uy, Uz] ]
 Public cov_rotate(1,2) '= [ [Ts, Uz_rot] ]
@@ -256,6 +262,10 @@ Units vlv_possible2 = scans
 Units unfilt_vlv_up_ON_Tot2 = scans
 Units unfilt_vlv_dn_ON_Tot2 = scans
 Units unfilt_vlv_possible2 = scans
+
+Public out_daily(13)
+Alias out_daily(10) = min_tmpr
+Alias out_daily(12) = max_tmpr
 
 Public Uz_rot 'real-time coordinate-rotated
 Units Uz_rot = m/s
@@ -367,6 +377,7 @@ Dim run_aborted As Boolean
 Dim rea_finished As Boolean 'OpenInterval trigger var
 Dim just_had_slow_scan As Boolean
 Dim inbetween_slow_scan As Boolean
+Dim self As String * 16
 
 
 '========================= SETTINGS RETENTION ===============================
@@ -585,6 +596,8 @@ DataTable(gps_daily,TRUE,30)
   Minimum(1,gps_ready,FP2,gps_ready=NAN,0)
   Sample(1,max_clock_change,UINT2)
   Sample(1,num_clock_change,UINT2)
+  Minimum(1,logger_tmpr,FP2,logger_tmpr=NAN,1)
+  Maximum(1,logger_tmpr,FP2,logger_tmpr=NAN,1)
 EndTable
 
 DataTable(info,True,50)
@@ -624,6 +637,48 @@ DataTable(info,True,50)
   Sample(1,VERSION,String)
     FieldNames("GitRepoTag")
 EndTable  
+
+
+'================================= EMAIL =====================================
+Include "CPU:email_Enc.cr3"  'contains non-public settings
+Const CRLF = CHR(13) & CHR(10)
+Public test_email As Boolean
+Public smtp_response As String * 80
+
+Sub send_startup_email()
+  Dim subject As String * 40, msg As String * 512
+  subject = "Start-up notice from " & self & " CR3000"
+  msg = ("This is the " & self & " CR3000. Starting up..." & CRLF & CRLF)
+  'HINT both CompileResults and CardStatus come with a trailing <CR><LF> but 
+  'CardStatus has a CRLF pair in the middle which must be stripped out
+  msg &= "Compile results: " & RTrim(Status.CompileResults(1))
+  msg &= "Card status: " & RTrim(Replace(Status.CardStatus(1), CRLF, " "))
+  msg &= CRLF & "Program error count: " & Status.ProgErrors & CRLF
+  msg &= "Watchdog error count: " & Status.WatchdogErrors & CRLF
+  msg &= "Run signature: " & Status.RunSignature & CRLF
+  msg &= "Program signature: " & Status.ProgSignature & CRLF
+  msg &= "Power input (Volts): " & Status.Battery & CRLF
+  EmailSend(SMTP_SERV,EMAIL_TO,EMAIL_FROM,subject,msg,"",SMTP_USER,SMTP_PASS,smtp_response)
+EndSub
+
+Sub send_test_email()
+  Dim subject As String * 40, msg As String * 512
+  subject = "Test email from " & self & " CR3000"
+  msg = "This is the " & self & " CR3000. Testing 1.. 2.. 3.." & CRLF
+  EmailSend(SMTP_SERV,EMAIL_TO,EMAIL_FROM,subject,msg,"",SMTP_USER,SMTP_PASS,smtp_response)
+EndSub
+
+Sub send_daily_email()
+  Dim subject As String * 40, msg As String * 512
+  subject = "Daily notice from " & self & " CR3000"
+  
+  GetRecord(out_daily(1),gps_daily,1)
+  msg = "Good morning from " & self & " CR3000. Yesterday my temperature ranged from "
+  msg &= FormatFloat(min_tmpr, "%3g") & " to "
+  msg &= FormatFloat(max_tmpr, "%3g") & " degC. " & CRLF
+  EmailSend(SMTP_SERV,EMAIL_TO,EMAIL_FROM,subject,msg,"",SMTP_USER,SMTP_PASS,smtp_response)
+EndSub
+
 
 
 '============================= CUSTOM MENUS =================================
@@ -709,6 +764,8 @@ DisplayMenu("LT REA DAQ", -1)
       MenuPick(operational, force_ON, force_OFF)
     MenuItem("DN valve is", debug_dn_vlv)
       MenuPick(operational, force_ON, force_OFF)
+    MenuItem("Test email?", test_email)
+      MenuPick(Cancel,Yes)
   EndSubMenu
 EndMenu
 
@@ -874,12 +931,14 @@ Sub setup()
   SerialOpen(SONIC_COM,SONIC_BAUD,SONIC_FORMAT,0,SONIC_BUFF)
   PortSet(SW12_CAN_P,True)
   PortSet(SW12_PMP_P,True)
+  self = Status.StationName
 EndSub
 
 
 '============================== PROGRAM =====================================
 BeginProg
   setup()
+  send_startup_email()
   
   Scan(FAST_INTV,msec,FAST_BUFF,0)
     If (mean_baro=NAN) Then
@@ -1052,6 +1111,9 @@ BeginProg
 
   SlowSequence
   Scan(SLOW_INTV,sec,3,0)
+    PanelTemp(logger_tmpr,INTEG)
+    Battery(logger_power)
+
     VoltDiff(hmp_T,1,mv1000,HMP_T_DF,True,0,INTEG,HMP_T_MULT,HMP_T_OFF)
     VoltDiff(hmp_RH,1,mv1000,HMP_RH_DF,True,0,INTEG,HMP_RH_MULT,HMP_RH_OFF)
     VaporPressure(hmp_e, hmp_T, hmp_RH)
@@ -1099,6 +1161,17 @@ BeginProg
   Scan(GPS_INTV,min,1,0)
     GPS(gps16x(1),GPS_COM,UTC_OFFSET*3600,GPS_MAX_DIFF,nmea_str(1))
     CallTable(gps_daily)
+  NextScan
+
+  SlowSequence 'REPORTING THREAD
+  Scan(1,Sec,2,0)
+    If (test_email) Then
+      test_email = False
+      send_test_email()
+    EndIf
+    If TimeIntoInterval(6,24,hr) Then
+      send_daily_email()
+    EndIf
   NextScan
 EndProg
 
