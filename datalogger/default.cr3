@@ -343,6 +343,8 @@ Public vlv_status
 Public vlv_ON(2) As Boolean
 Alias vlv_ON(1) = vlv_up_ON
 Alias vlv_ON(2) = vlv_dn_ON
+Public debug_up_vlv
+Public debug_dn_vlv
 
 Public elapsed_time As Long
 Units elapsed_time = min
@@ -627,6 +629,9 @@ EndTable
 '============================= CUSTOM MENUS =================================
 Const Yes = True
 Const Cancel = False
+Const operational = 0
+Const force_ON = -1
+Const force_OFF = 1
 Dim save_settings As Boolean
 Dim discard_settings As Boolean
 Dim reset_settings As Boolean
@@ -697,6 +702,13 @@ DisplayMenu("LT REA DAQ", -1)
     EndSubMenu
     MenuRecompile("Apply now?", recompile)
       MenuPick(Cancel,Yes)
+  EndSubMenu
+
+  SubMenu("Debug")
+    MenuItem("UP valve is", debug_up_vlv)
+      MenuPick(operational, force_ON, force_OFF)
+    MenuItem("DN valve is", debug_dn_vlv)
+      MenuPick(operational, force_ON, force_OFF)
   EndSubMenu
 EndMenu
 
@@ -908,11 +920,20 @@ BeginProg
     AvgRun(mean_Uy,1,sonic_Uy,WDFILT_RUNAVG)
     Uz_rot = sonic_Uz*CT - sonic_Uz*ST*CE - sonic_Uy*ST*SE
 
+    'bit    meaning of True
+    ' 1      up valve is ON
+    ' 2      down valve is ON
+    ' 3      poor WD flag
+    ' 4      poor RH (rain) flag
+    ' 5
+    ' 6
+    ' 7      up valve controlled by debug override
+    ' 8      down valve controlled by debug overrride
     If (NOT is_running OR wait_flag) Then
       vlv_up_ON = False
       vlv_dn_ON = False
       vlv_status = 0
-      If poor_WD Then vlv_status += &b0100 'WD flag
+      If poor_WD Then vlv_status += &b0100 'WD flag 
       If poor_RH Then vlv_status += &b1000 'RH flag (rain proxy)
     ElseIf (Uz_rot >= deadband) Then
       vlv_up_ON = True
@@ -926,6 +947,14 @@ BeginProg
       vlv_up_ON = False
       vlv_dn_ON = False
       vlv_status = 0
+    EndIf
+    If (debug_up_vlv) Then 
+      vlv_up_ON = (debug_up_vlv = force_ON)
+      vlv_status = (vlv_status OR &b01000000)
+    EndIf
+    If (debug_dn_vlv) Then 
+      vlv_dn_ON = (debug_dn_vlv = force_ON)
+      vlv_status = (vlv_status OR &b10000000)
     EndIf
     PortSet(CTRL_VLV_UP,vlv_up_ON) 'HINT use PortSet (measurement task) not
     PortSet(CTRL_VLV_DN,vlv_dn_ON) 'WriteIO (processing task = delayed)
