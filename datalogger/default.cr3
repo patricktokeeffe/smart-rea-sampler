@@ -661,10 +661,15 @@ Const Disable = False
 Const operational = 0
 Const force_ON = -1
 Const force_OFF = 1
+Const EndsRun = False
+Const Ignore = True
 Public save_settings As Boolean
 Public discard_settings As Boolean
 Public reset_settings As Boolean
 Dim recompile As Boolean
+
+'HINT define after 'save_settings` to keep Public organized
+Public ignore_cans_full As Boolean 'TODO track status?
 
 DisplayMenu("LT REA DAQ", -1)
   SubMenu("Status")
@@ -769,6 +774,8 @@ DisplayMenu("LT REA DAQ", -1)
       MenuPick(operational, force_ON, force_OFF)
     MenuItem("DN valve is", debug_dn_vlv)
       MenuPick(operational, force_ON, force_OFF)
+    MenuItem("Cans full?", ignore_cans_full)
+      MenuPick(EndsRun, Ignore)
   EndSubMenu
 EndMenu
 
@@ -1134,7 +1141,11 @@ BeginProg
     '      OR maybe compare to minimum barometric pressure in last 24 hrs?
     max_can_press = mean_baro * (CRITICAL_RATIO - can_fill_margin)
     max_pump_press = max_can_press * PUMP_SF
-    cans_full = mean_can_UP >= max_can_press OR mean_can_DN >= max_can_press
+    If (ignore_cans_full) Then
+      cans_full = False
+    Else
+      cans_full = mean_can_UP >= max_can_press OR mean_can_DN >= max_can_press
+    EndIf
     pump_fault = is_running AND (mean_pump_UP >= max_pump_press OR _
                                  mean_pump_DN >= max_pump_press)
     'FIXME: pump_fault has race condition where cannot be true until >5 sec 
