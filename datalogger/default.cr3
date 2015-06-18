@@ -922,6 +922,10 @@ BeginProg
       vlv_up_ON = False
       vlv_dn_ON = True
       vlv_status = &b10
+    Else
+      vlv_up_ON = False
+      vlv_dn_ON = False
+      vlv_status = 0
     EndIf
     PortSet(CTRL_VLV_UP,vlv_up_ON) 'HINT use PortSet (measurement task) not
     PortSet(CTRL_VLV_DN,vlv_dn_ON) 'WriteIO (processing task = delayed)
