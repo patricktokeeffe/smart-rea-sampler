@@ -113,9 +113,11 @@ Const GPS_MED_NUM = 1440/GPS_INTV 'max # of values included in median calc
 
 
 '============================= VARIABLES ====================================
+Public debug_on As Boolean
+
 Dim sonic_bytes
 Dim sonic_record As String * SONIC_RECLEN
-Public sonic(5)
+Dim sonic(5)
 Alias sonic(1) = sonic_Ux
 Alias sonic(2) = sonic_Uy
 Alias sonic(3) = sonic_Uz
@@ -125,9 +127,9 @@ Units sonic = m/s
 Units sonic_Ts = degC
 Units sonic_diag = arb
 
-Public disable_sonic As Boolean
+Dim disable_sonic As Boolean
 
-Public hmp(3)
+Dim hmp(3)
 Alias hmp(1) = hmp_T
 Alias hmp(2) = hmp_RH
 Alias hmp(3) = hmp_e
@@ -135,7 +137,7 @@ Units hmp_T = degC
 Units hmp_RH = %
 Units hmp_e = kPa
 
-Public pressure(5)
+Dim pressure(5)
 Alias pressure(1) = press_can_UP
 Alias pressure(2) = press_can_DN
 Alias pressure(3) = press_pump_UP
@@ -144,7 +146,7 @@ Alias pressure(5) = press_baro
 Units pressure = mbar
 
 Dim nmea_str(2) As String * 90
-Public gps16x(15)
+Dim gps16x(15)
 Alias gps16x(1)  = lat_deg        '(+)=North, (-)=South
 Alias gps16x(2)  = lat_min
 Alias gps16x(3)  = long_deg       '(+)=East, (-)=West
@@ -171,18 +173,18 @@ Units since_gprmc = s
 Units max_clock_change = ms
 Units num_clock_change = occurrences
 
-Public cr3k(2)
+Dim cr3k(2)
 Alias cr3k(1) = logger_tmpr
 Alias cr3k(2) = logger_power
 Units logger_tmpr = degC
 Units logger_power = Vdc
 
 '-------------------------- PROCESSING -------------------------------------
-Public cov_sonic(1,4) '= [ [Ts, Ux, Uy, Uz] ]
-Public cov_rotate(1,2) '= [ [Ts, Uz_rot] ]
-Public cov_rea(1,3) '= [ [Ts, Uz, Uz_rot] ]
+Dim cov_sonic(1,4) '= [ [Ts, Ux, Uy, Uz] ]
+Dim cov_rotate(1,2) '= [ [Ts, Uz_rot] ]
+Dim cov_rea(1,3) '= [ [Ts, Uz, Uz_rot] ]
 
-Public work_out(31)
+Dim work_out(31)
 Alias work_out(1)  = Ux_Avg '4x Average()
 Alias work_out(2)  = Uy_Avg
 Alias work_out(3)  = Uz_Avg
@@ -236,7 +238,7 @@ Units unfilt_vlv_up_ON_Tot = scans
 Units unfilt_vlv_dn_ON_Tot = scans
 Units unfilt_vlv_possible = scans
 
-Public rea_out(14)
+Dim rea_out(14)
 Alias rea_out(1)  = Ts_Std2 'Covariance(), 6 vals
 Alias rea_out(2)  = cov_Ts_Uz2
 Alias rea_out(3)  = cov_Ts_Uz_rot2
@@ -263,16 +265,16 @@ Units unfilt_vlv_up_ON_Tot2 = scans
 Units unfilt_vlv_dn_ON_Tot2 = scans
 Units unfilt_vlv_possible2 = scans
 
-Public out_daily(13)
+Dim out_daily(13)
 Alias out_daily(10) = min_tmpr
 Alias out_daily(12) = max_tmpr
 
-Public Uz_rot 'real-time coordinate-rotated
+Dim Uz_rot 'real-time coordinate-rotated
 Units Uz_rot = m/s
 
 Dim sqrt_UV
 Dim sqrt_UVW
-Public rot_angles(6)
+Dim rot_angles(6)
 Alias rot_angles(1) = CE
 Alias rot_angles(2) = SE
 Alias rot_angles(3) = CT
@@ -282,32 +284,32 @@ Alias rot_angles(6) = theta
 Units eta = degrees
 Units theta = degrees
 
-Public rotated(4) 'stream-wise coordinates
+Dim rotated(4) 'stream-wise coordinates
 Alias rotated(1) = U_Avg
 Alias rotated(2) = V_Avg
 Alias rotated(3) = W_Avg
 Alias rotated(4) = W_Std
 Units rotated = m/s
 
-Public derived(2)
+Dim derived(2)
 Alias derived(1) = hmp_e_sat_Avg
 Alias derived(2) = hmp_RH_Avg
 Units hmp_e_sat_Avg = kPa
 Units hmp_RH_Avg = %
 
-Public rea_sim(3)
+Dim rea_sim(3)
 Alias rea_sim(1) = rea_Ts_up
 Alias rea_sim(2) = rea_Ts_dn
 Alias rea_sim(3) = delta_Ts
 Units rea_sim = degC
 
-Public beta(3)
+Dim beta(3)
 Alias beta(1) = beta_Ts_Uz
 Alias beta(2) = beta_Ts_Uz_rot
 Alias beta(3) = beta_Ts_W
 Units beta = dimless
 
-Public turb(3) 'assorted turbulence/flux-related vars
+Dim turb(3) 'assorted turbulence/flux-related vars
 Alias turb(1) = u_star    'friction velocity
 Alias turb(2) = L_        'Obukhov length
 Alias turb(3) = itt       'integral turbulence test
@@ -315,7 +317,7 @@ Units u_star = m/s
 Units L_ = m
 Units itt = %
 
-Public vlv_fraction(5)
+Dim vlv_fraction(5)
 Alias vlv_fraction(1) = vlv_up_fraction
 Alias vlv_fraction(2) = vlv_dn_fraction
 Alias vlv_fraction(3) = unfilt_vlv_up_fraction
@@ -323,7 +325,7 @@ Alias vlv_fraction(4) = unfilt_vlv_dn_fraction
 Alias vlv_fraction(5) = fraction_filtered_out
 Units vlv_fraction = ratio
 
-Public run_means(12)
+Dim run_means(12)
 Alias run_means(1)  = mean_can_UP
 Alias run_means(2)  = mean_can_DN
 Alias run_means(3)  = mean_pump_UP
@@ -334,7 +336,14 @@ Alias run_means(7)  = mean_Uy
 Alias run_means(8)  = mean_WD
 Alias run_means(9)  = mean_WS
 Alias run_means(10) = mean_RH
-Units run_means = mbar
+'Units run_means = mbar    'HACK: Bug is present in CR3000.Std.27 which prevents
+                           'assigning units to aliases if array has been assigned
+                           'units. Only affects Dim, not Public, variables 
+Units mean_can_UP = mbar
+Units mean_can_DN = mbar
+Units mean_pump_UP = mbar
+Units mean_pump_DN = mbar
+Units mean_baro = mbar
 Units mean_Ux = m/s
 Units mean_Uy = m/s
 Units mean_WD = degEofTN
@@ -342,39 +351,37 @@ Units mean_WS = m/s
 Units mean_RH = %
 
 '----------------------------- OPERATION -----------------------------------
-Public deadband
+Dim deadband
 Dim neg_deadband
 Units deadband = m/s
 
-Public azimuth
+Dim azimuth
 Units azimuth = degEofTN
 
-Public vlv_status
-Public vlv_ON(2) As Boolean
+Dim vlv_status
+Dim vlv_ON(2) As Boolean
 Alias vlv_ON(1) = vlv_up_ON
 Alias vlv_ON(2) = vlv_dn_ON
-Public debug_up_vlv
-Public debug_dn_vlv
 
-Public elapsed_time As Long
+Dim elapsed_time As Long
 Units elapsed_time = min
 
-Public is_running As Boolean
-Public cans_full As Boolean
-Public pump_fault As Boolean
+Dim is_running As Boolean
+Dim cans_full As Boolean
+Dim pump_fault As Boolean
 
 Dim can_fill_margin
-Public max_can_press
-Public max_pump_press
+Dim max_can_press
+Dim max_pump_press
 
-Public wait_flag As Boolean
-Public poor_condition_flags(2) As Boolean
+Dim wait_flag As Boolean
+Dim poor_condition_flags(2) As Boolean
 Alias poor_condition_flags(1) = poor_WD
 Alias poor_condition_flags(2) = poor_RH
 
-Dim run_queued As Boolean
-Dim run_aborted As Boolean
-Dim rea_finished As Boolean 'OpenInterval trigger var
+Public run_queued As Boolean
+Public run_aborted As Boolean
+Public rea_finished As Boolean 'OpenInterval trigger var
 Dim just_had_slow_scan As Boolean
 Dim inbetween_slow_scan As Boolean
 Dim self As String * 16
@@ -405,24 +412,24 @@ Const DEF_WDFILT_MIN = 0 'deg E of TN
 Const DEF_WDFILT_MAX = 359 'deg E of TN 
 Const DEF_RHFILT_MAX = 90 '%
 
-Dim choice(NUM_SETTINGS)
-Alias choice(1)  = ch_dband_mult
-Alias choice(2)  = ch_dband_min
-Alias choice(3)  = ch_dband_def
-Alias choice(4)  = ch_sonic_azimuth
-Alias choice(5)  = ch_sonic_height
-Alias choice(6)  = ch_site_declin
-Alias choice(7)  = ch_site_rufness
-Alias choice(8)  = ch_site_fetch_N
-Alias choice(9)  = ch_site_fetch_E
-Alias choice(10) = ch_site_fetch_S
-Alias choice(11) = ch_site_fetch_W
-Alias choice(12) = ch_fill_margin
-Alias choice(13) = ch_wdfilt_min
-Alias choice(14) = ch_wdfilt_max
-Alias choice(15) = ch_rhfilt_max
+Public choice(NUM_SETTINGS)
+Alias choice(1)  = set_dband_mult
+Alias choice(2)  = set_dband_min
+Alias choice(3)  = set_dband_def
+Alias choice(4)  = set_sonic_azimuth
+Alias choice(5)  = set_sonic_height
+Alias choice(6)  = set_site_declin
+Alias choice(7)  = set_site_rufness
+Alias choice(8)  = set_site_fetch_N
+Alias choice(9)  = set_site_fetch_E
+Alias choice(10) = set_site_fetch_S
+Alias choice(11) = set_site_fetch_W
+Alias choice(12) = set_fill_margin
+Alias choice(13) = set_wdfilt_min
+Alias choice(14) = set_wdfilt_max
+Alias choice(15) = set_rhfilt_max
 
-Public settings(NUM_SETTINGS)
+Dim settings(NUM_SETTINGS)
 Alias settings(1)  = dband_mult
 Alias settings(2)  = dband_min
 Alias settings(3)  = dband_def
@@ -454,6 +461,24 @@ Units fill_margin = %
 Units wdfilt_min = degEofTN
 Units wdfilt_max = defEofTN
 Units rhfilt_max = %
+
+
+'========================  REMOTE MONITORING  ===============================
+DataTable(debug,True,2)
+  Sample(5,sonic(1),IEEE4)
+  Sample(2,hmp(1),IEEE4)
+  Sample(5,pressure(1),IEEE4)
+  Sample(15,gps16x(1),IEEE4)
+  Sample(1,deadband,IEEE4)
+  Sample(2,vlv_ON(1),Boolean)
+  Sample(1,elapsed_time,IEEE4)
+  Sample(1,is_running,Boolean)
+  Sample(1,cans_full,Boolean)
+  Sample(1,pump_fault,Boolean)
+  Sample(1,poor_WD,Boolean)
+  Sample(1,poor_RH,Boolean)
+  Sample(1,rea_finished,Boolean)
+EndTable
 
 
 '============================ DATA TABLES ===================================
@@ -642,8 +667,7 @@ EndTable
 '================================= EMAIL =====================================
 Include "CPU:email_Enc.cr3"  'contains non-public settings
 Const CRLF = CHR(13) & CHR(10)
-Public test_email As Boolean
-Public smtp_response As String * 80
+Dim smtp_response As String * 80
 
 Sub send_email(subject As String * 40, msg As String * 512)
     EmailSend(SMTP_SERV,EMAIL_TO,EMAIL_FROM,subject,msg,"",SMTP_USER,SMTP_PASS,smtp_response)
@@ -697,14 +721,24 @@ EndSub
 
 '============================= CUSTOM MENUS =================================
 Const Yes = True
+Const Enable = True
 Const Cancel = False
+Const Disable = False
 Const operational = 0
 Const force_ON = -1
 Const force_OFF = 1
-Dim save_settings As Boolean
-Dim discard_settings As Boolean
-Dim reset_settings As Boolean
+Const EndsRun = False
+Const Ignore = True
+Public save_settings As Boolean
+Public discard_settings As Boolean
+Public reset_settings As Boolean
 Dim recompile As Boolean
+
+'HINT define after 'save_settings` to keep Public organized
+Public test_email As Boolean
+Public ignore_cans_full As Boolean 'TODO track status?
+Public debug_up_vlv
+Public debug_dn_vlv
 
 DisplayMenu("LT REA DAQ", -1)
   SubMenu("Status")
@@ -727,26 +761,26 @@ DisplayMenu("LT REA DAQ", -1)
 
   SubMenu("Settings")
     SubMenu("Sampling")
-      MenuItem("Fill margin, %", ch_fill_margin)
+      MenuItem("Fill margin, %", set_fill_margin)
         MenuPick(5, 10, 15, 20, 25)
-      MenuItem("Min WD, deg", ch_wdfilt_min)
-      MenuItem("Max WD, deg", ch_wdfilt_max)
-      MenuItem("Max RH, %", ch_rhfilt_max)
-      MenuItem("Max fetch N, m", ch_site_fetch_N)
-      MenuItem("Max fetch E, m", ch_site_fetch_E)
-      MenuItem("Max fetch S, m", ch_site_fetch_S)
-      MenuItem("Max fetch W, m", ch_site_fetch_W)
+      MenuItem("Min WD, deg", set_wdfilt_min)
+      MenuItem("Max WD, deg", set_wdfilt_max)
+      MenuItem("Max RH, %", set_rhfilt_max)
+      MenuItem("Max fetch N, m", set_site_fetch_N)
+      MenuItem("Max fetch E, m", set_site_fetch_E)
+      MenuItem("Max fetch S, m", set_site_fetch_S)
+      MenuItem("Max fetch W, m", set_site_fetch_W)
     EndSubMenu
     SubMenu("Deadband")
-      MenuItem("Multiplier", ch_dband_mult)
-      MenuItem("Minimum, m/s", ch_dband_min)
-      MenuItem("Default, m/s", ch_dband_def)
+      MenuItem("Multiplier", set_dband_mult)
+      MenuItem("Minimum, m/s", set_dband_min)
+      MenuItem("Default, m/s", set_dband_def)
     EndSubMenu
     SubMenu("Site & sensors")
-      MenuItem("Sonic height, m", ch_sonic_height)
-      MenuItem("Sonic azimuth, deg", ch_sonic_azimuth)
-      MenuItem("Mag. declin., deg", ch_site_declin)
-      MenuItem("Roughness length, in", ch_site_rufness)
+      MenuItem("Sonic height, m", set_sonic_height)
+      MenuItem("Sonic azimuth, deg", set_sonic_azimuth)
+      MenuItem("Mag. declin., deg", set_site_declin)
+      MenuItem("Roughness length, in", set_site_rufness)
     EndSubMenu
     SubMenu("Apply/cancel")
       MenuItem("Save now?", save_settings)
@@ -774,10 +808,43 @@ DisplayMenu("LT REA DAQ", -1)
   EndSubMenu
 
   SubMenu("Debug")
+    SubMenu("Monitor sensors")
+      DisplayValue("sonic Ux", sonic_Ux)
+      DisplayValue("sonic Uy", sonic_Uy)
+      DisplayValue("sonic Uz", sonic_Uz)
+      DisplayValue("sonic Ts", sonic_Ts)
+      DisplayValue("sonic diag", sonic_diag)
+      DisplayValue("HMP tmpr", hmp_T)
+      DisplayValue("HMP RH", hmp_RH)
+      DisplayValue("Can up press", press_can_UP)
+      DisplayValue("Can dn press", press_can_DN)
+      DisplayValue("Pmp up press", press_pump_UP)
+      DisplayValue("Pmp dn press", press_pump_DN)
+      DisplayValue("Baro press", press_baro)
+      DisplayValue("GPS lat deg", lat_deg)
+      DisplayValue("GPS lat min", lat_min)
+      DisplayValue("GPS long deg", long_deg)
+      DisplayValue("GPS long min", long_min)
+      DisplayValue("GPS speed", speed)
+      DisplayValue("GPS course", course)
+      DisplayValue("GPS mag var", mag_var)
+      DisplayValue("GPS fix qual", fix_quality)
+      DisplayValue("GPS num sat", num_sat)
+      DisplayValue("GPS altitude", altitude)
+      DisplayValue("GPS pps", since_pps)
+      DisplayValue("GPS msg time", since_gprmc)
+      DisplayValue("GPS ready", gps_ready)
+      DisplayValue("GPS max adj", max_clock_change)
+      DisplayValue("GPS num adj", num_clock_change)
+    EndSubMenu
+    MenuItem("Debug table", debug_on)
+      MenuPick(Disable, Enable)
     MenuItem("UP valve is", debug_up_vlv)
       MenuPick(operational, force_ON, force_OFF)
     MenuItem("DN valve is", debug_dn_vlv)
       MenuPick(operational, force_ON, force_OFF)
+    MenuItem("Cans full?", ignore_cans_full)
+      MenuPick(EndsRun, Ignore)
     MenuItem("Test email?", test_email)
       MenuPick(Cancel,Yes)
   EndSubMenu
@@ -815,21 +882,21 @@ Sub update_deadband() 'FIXME TODO
 EndSub
 
 Sub set_default_choices() '-------------------------------------------------
-  ch_dband_mult = DEF_DBAND_MULT
-  ch_dband_min = DEF_DBAND_MIN
-  ch_dband_def = DEF_DBAND_DEF
-  ch_sonic_azimuth = DEF_SONIC_AZIMUTH
-  ch_sonic_height = DEF_SONIC_HEIGHT
-  ch_site_declin = DEF_SITE_DECLIN
-  ch_site_rufness = DEF_SITE_RUFNESS
-  ch_site_fetch_N = DEF_SITE_FETCH_N
-  ch_site_fetch_E = DEF_SITE_FETCH_E
-  ch_site_fetch_S = DEF_SITE_FETCH_S
-  ch_site_fetch_W = DEF_SITE_FETCH_W
-  ch_fill_margin = DEF_FILL_MARGIN
-  ch_wdfilt_min = DEF_WDFILT_MIN
-  ch_wdfilt_max = DEF_WDFILT_MAX
-  ch_rhfilt_max = DEF_RHFILT_MAX
+  set_dband_mult = DEF_DBAND_MULT
+  set_dband_min = DEF_DBAND_MIN
+  set_dband_def = DEF_DBAND_DEF
+  set_sonic_azimuth = DEF_SONIC_AZIMUTH
+  set_sonic_height = DEF_SONIC_HEIGHT
+  set_site_declin = DEF_SITE_DECLIN
+  set_site_rufness = DEF_SITE_RUFNESS
+  set_site_fetch_N = DEF_SITE_FETCH_N
+  set_site_fetch_E = DEF_SITE_FETCH_E
+  set_site_fetch_S = DEF_SITE_FETCH_S
+  set_site_fetch_W = DEF_SITE_FETCH_W
+  set_fill_margin = DEF_FILL_MARGIN
+  set_wdfilt_min = DEF_WDFILT_MIN
+  set_wdfilt_max = DEF_WDFILT_MAX
+  set_rhfilt_max = DEF_RHFILT_MAX
 EndSub
 
 Sub populate_choices()
@@ -838,50 +905,50 @@ EndSub
 
 Sub save_current_choices()
   'HINT treat azimuth differently since 0 is valid option
-  If (ch_sonic_azimuth < 0) Then
-    ch_sonic_azimuth = -1
+  If (set_sonic_azimuth < 0) Then
+    set_sonic_azimuth = -1
     azimuth = 0
   Else
-    ch_sonic_azimuth = ch_sonic_azimuth MOD 360
+    set_sonic_azimuth = set_sonic_azimuth MOD 360
     azimuth = sonic_azimuth
   EndIf
 
-  If (ch_sonic_height < 0) Then (ch_sonic_height = 0)
-  If (ch_site_declin < DECLIN_MIN) Then (ch_site_declin = DECLIN_MIN)
-  If (ch_site_declin > DECLIN_MAX) Then (ch_site_declin = DECLIN_MAX)
-  If (ch_site_fetch_N < 0) Then (ch_site_fetch_N = 0)
-  If (ch_site_fetch_E < 0) Then (ch_site_fetch_E = 0)
-  If (ch_site_fetch_S < 0) Then (ch_site_fetch_S = 0)
-  If (ch_site_fetch_W < 0) Then (ch_site_fetch_W = 0)
-  If (ch_site_rufness < 0) Then (ch_site_rufness = 0)
+  If (set_sonic_height < 0) Then (set_sonic_height = 0)
+  If (set_site_declin < DECLIN_MIN) Then (set_site_declin = DECLIN_MIN)
+  If (set_site_declin > DECLIN_MAX) Then (set_site_declin = DECLIN_MAX)
+  If (set_site_fetch_N < 0) Then (set_site_fetch_N = 0)
+  If (set_site_fetch_E < 0) Then (set_site_fetch_E = 0)
+  If (set_site_fetch_S < 0) Then (set_site_fetch_S = 0)
+  If (set_site_fetch_W < 0) Then (set_site_fetch_W = 0)
+  If (set_site_rufness < 0) Then (set_site_rufness = 0)
 
-  If (ch_wdfilt_min < 0) Then (ch_wdfilt_min = 0)
-  If (ch_wdfilt_max > 359) Then (ch_wdfilt_max = 359)
-  If (ch_wdfilt_max < ch_wdfilt_min) Then (ch_wdfilt_max = ch_wdfilt_min)
-  If (ch_rhfilt_max < RHFILT_MIN) Then (ch_rhfilt_max = RHFILT_MIN)
-  If (ch_rhfilt_max > 100) Then (ch_rhfilt_max = 100)
+  If (set_wdfilt_min < 0) Then (set_wdfilt_min = 0)
+  If (set_wdfilt_max > 359) Then (set_wdfilt_max = 359)
+  If (set_wdfilt_max < set_wdfilt_min) Then (set_wdfilt_max = set_wdfilt_min)
+  If (set_rhfilt_max < RHFILT_MIN) Then (set_rhfilt_max = RHFILT_MIN)
+  If (set_rhfilt_max > 100) Then (set_rhfilt_max = 100)
 
-  If (ch_fill_margin < MARGIN_MIN) Then (ch_fill_margin = MARGIN_MIN)
-  If (ch_fill_margin > MARGIN_MAX) Then (ch_fill_margin = MARGIN_MAX)
+  If (set_fill_margin < MARGIN_MIN) Then (set_fill_margin = MARGIN_MIN)
+  If (set_fill_margin > MARGIN_MAX) Then (set_fill_margin = MARGIN_MAX)
 
   'HINT order matters when validating dband settings!
-  If (ch_dband_min < 0) Then (ch_dband_min = 0)
-  If (ch_dband_def < ch_dband_min) Then (ch_dband_def = ch_dband_min)
-  If (ch_dband_mult > DBMULT_MAX) Then (ch_dband_mult = DBMULT_MAX)
-  If (ch_dband_mult < 0 OR (ch_dband_mult = 0 AND ch_dband_min > 0)) Then
-    ch_dband_mult = DEF_DBAND_MULT
+  If (set_dband_min < 0) Then (set_dband_min = 0)
+  If (set_dband_def < set_dband_min) Then (set_dband_def = set_dband_min)
+  If (set_dband_mult > DBMULT_MAX) Then (set_dband_mult = DBMULT_MAX)
+  If (set_dband_mult < 0 OR (set_dband_mult = 0 AND set_dband_min > 0)) Then
+    set_dband_mult = DEF_DBAND_MULT
   EndIf
 
-  ch_sonic_azimuth = INT(ch_sonic_azimuth)
-  ch_site_declin = INT(ch_site_declin)
-  ch_site_fetch_N = INT(ch_site_fetch_N)
-  ch_site_fetch_E = INT(ch_site_fetch_E)
-  ch_site_fetch_S = INT(ch_site_fetch_S)
-  ch_site_fetch_W = INT(ch_site_fetch_W)
-  ch_wdfilt_min = INT(ch_wdfilt_min)
-  ch_wdfilt_max = INT(ch_wdfilt_max)
-  ch_rhfilt_max = INT(ch_rhfilt_max)
-  ch_fill_margin = INT(ch_fill_margin)
+  set_sonic_azimuth = INT(set_sonic_azimuth)
+  set_site_declin = INT(set_site_declin)
+  set_site_fetch_N = INT(set_site_fetch_N)
+  set_site_fetch_E = INT(set_site_fetch_E)
+  set_site_fetch_S = INT(set_site_fetch_S)
+  set_site_fetch_W = INT(set_site_fetch_W)
+  set_wdfilt_min = INT(set_wdfilt_min)
+  set_wdfilt_max = INT(set_wdfilt_max)
+  set_rhfilt_max = INT(set_rhfilt_max)
+  set_fill_margin = INT(set_fill_margin)
   Move(settings(1),NUM_SETTINGS,choice(1),NUM_SETTINGS)
   Calfile(settings,NUM_SETTINGS,SETTINGS_FILE,WRITEFILE)
 
@@ -1151,12 +1218,17 @@ BeginProg
     '      OR maybe compare to minimum barometric pressure in last 24 hrs?
     max_can_press = mean_baro * (CRITICAL_RATIO - can_fill_margin)
     max_pump_press = max_can_press * PUMP_SF
-    cans_full = mean_can_UP >= max_can_press OR mean_can_DN >= max_can_press
+    If (ignore_cans_full) Then
+      cans_full = False
+    Else
+      cans_full = mean_can_UP >= max_can_press OR mean_can_DN >= max_can_press
+    EndIf
     pump_fault = is_running AND (mean_pump_UP >= max_pump_press OR _
                                  mean_pump_DN >= max_pump_press)
     'FIXME: pump_fault has race condition where cannot be true until >5 sec 
     '       after start of run, therefore can't be used as flag proper
 
+    If (debug_on) Then CallTable(debug)
     CallTable(ts_slow)
     just_had_slow_scan = True
   NextScan
