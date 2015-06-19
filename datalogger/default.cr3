@@ -478,6 +478,7 @@ DataTable(debug,True,2)
   Sample(1,poor_WD,Boolean)
   Sample(1,poor_RH,Boolean)
   Sample(1,rea_finished,Boolean)
+  Sample(1,smtp_response,String)
 EndTable
 
 
