@@ -381,7 +381,7 @@ Alias poor_condition_flags(2) = poor_RH
 
 Public run_queued As Boolean
 Public run_aborted As Boolean
-Public rea_finished As Boolean 'OpenInterval trigger var
+Dim rea_finished As Boolean 'OpenInterval trigger var
 Dim just_had_slow_scan As Boolean
 Dim inbetween_slow_scan As Boolean
 Dim self As String * 16
